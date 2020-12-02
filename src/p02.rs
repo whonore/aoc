@@ -53,7 +53,7 @@ impl Policy {
     }
 }
 
-fn solve(xs: &[(Policy, String)]) -> usize {
+fn solve(xs: &[(Policy, &str)]) -> usize {
     xs.iter()
         .filter(|(policy, pass)| policy.is_valid(pass))
         .count()
@@ -61,11 +61,11 @@ fn solve(xs: &[(Policy, String)]) -> usize {
 
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/p02.txt");
-    let mut xs: Vec<(Policy, String)> = input
+    let mut xs: Vec<(Policy, &str)> = input
         .lines()
         .map(|x| {
             let x: Vec<&str> = x.split(": ").collect();
-            (x[0].parse().unwrap(), x[1].into())
+            (x[0].parse().unwrap(), x[1])
         })
         .collect();
     let out1 = solve(&xs);
