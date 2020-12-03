@@ -1,7 +1,7 @@
 use std::ops::Index;
 use std::str::FromStr;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 struct Slope {
     right: usize,
     down: usize,
@@ -80,7 +80,7 @@ impl Index<(usize, usize)> for Grid {
     }
 }
 
-fn solve(grid: &Grid, slope: Slope) -> usize {
+fn count_trees(grid: &Grid, slope: Slope) -> usize {
     slope
         .take_while(|(row, _)| *row < grid.height())
         .map(|(row, col)| &grid[(row, col)])
@@ -88,11 +88,27 @@ fn solve(grid: &Grid, slope: Slope) -> usize {
         .count()
 }
 
+fn solve(grid: &Grid, slopes: &[Slope]) -> usize {
+    slopes
+        .iter()
+        .map(|slope| count_trees(grid, *slope))
+        .product()
+}
+
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/p03.txt");
     let grid = input.parse()?;
-    let out1 = solve(&grid, Slope::new(3, 1));
-    let out2 = "";
+    let out1 = solve(&grid, &[Slope::new(3, 1)]);
+    let out2 = solve(
+        &grid,
+        &[
+            Slope::new(1, 1),
+            Slope::new(3, 1),
+            Slope::new(5, 1),
+            Slope::new(7, 1),
+            Slope::new(1, 2),
+        ],
+    );
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -140,6 +156,36 @@ mod tests {
                     .#..#...#.#"
             .parse()
             .unwrap();
-        assert_eq!(solve(&grid, Slope::new(3, 1)), 7);
+        assert_eq!(count_trees(&grid, Slope::new(3, 1)), 7);
+    }
+
+    #[test]
+    fn test02() {
+        let grid = "..##.......\n\
+                    #...#...#..\n\
+                    .#....#..#.\n\
+                    ..#.#...#.#\n\
+                    .#...##..#.\n\
+                    ..#.##.....\n\
+                    .#.#.#....#\n\
+                    .#........#\n\
+                    #.##...#...\n\
+                    #...##....#\n\
+                    .#..#...#.#"
+            .parse()
+            .unwrap();
+        assert_eq!(
+            solve(
+                &grid,
+                &[
+                    Slope::new(1, 1),
+                    Slope::new(3, 1),
+                    Slope::new(5, 1),
+                    Slope::new(7, 1),
+                    Slope::new(1, 2),
+                ]
+            ),
+            336
+        );
     }
 }
