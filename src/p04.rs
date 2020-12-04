@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use lazy_static::lazy_static;
+use regex::Regex;
+
 #[derive(PartialEq, Eq, Debug, Hash)]
 enum Field {
     BYR,
@@ -13,6 +16,8 @@ enum Field {
     CID,
 }
 use Field::*;
+
+const REQUIRED: [Field; 7] = [BYR, IYR, EYR, HGT, HCL, ECL, PID];
 
 impl FromStr for Field {
     type Err = String;
@@ -27,7 +32,41 @@ impl FromStr for Field {
             "ecl" => Ok(ECL),
             "pid" => Ok(PID),
             "cid" => Ok(CID),
-            _ => Err("Invalid field".into()),
+            _ => Err(format!("Invalid field: {}", f)),
+        }
+    }
+}
+
+fn in_range(n: &str, min: u32, max: u32) -> bool {
+    n.parse::<u32>()
+        .map(|v| min <= v && v <= max)
+        .unwrap_or(false)
+}
+
+impl Field {
+    fn validate(&self, val: &str) -> bool {
+        lazy_static! {
+            static ref HGT_RE: Regex = Regex::new(r"^(\d+)(cm|in)$").unwrap();
+            static ref HCL_RE: Regex = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
+            static ref ECL_RE: Regex = Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
+            static ref PID_RE: Regex = Regex::new(r"^\d{9}$").unwrap();
+        }
+        match self {
+            BYR => in_range(val, 1920, 2002),
+            IYR => in_range(val, 2010, 2020),
+            EYR => in_range(val, 2020, 2030),
+            HGT => HGT_RE
+                .captures(val)
+                .map(|caps| match &caps[2] {
+                    "cm" => in_range(&caps[1], 150, 193),
+                    "in" => in_range(&caps[1], 59, 76),
+                    _ => false,
+                })
+                .unwrap_or(false),
+            HCL => HCL_RE.is_match(val),
+            ECL => ECL_RE.is_match(val),
+            PID => PID_RE.is_match(val),
+            CID => true,
         }
     }
 }
@@ -36,7 +75,6 @@ impl FromStr for Field {
 struct Passport {
     fields: HashMap<Field, String>,
 }
-const REQUIRED: [Field; 7] = [BYR, IYR, EYR, HGT, HCL, ECL, PID];
 
 impl FromStr for Passport {
     type Err = String;
@@ -54,13 +92,14 @@ impl FromStr for Passport {
 }
 
 impl Passport {
-    fn is_valid(&self) -> bool {
+    fn validate(&self, check_value: bool) -> bool {
         REQUIRED.iter().all(|f| self.fields.contains_key(f))
+            && (!check_value || self.fields.iter().all(|(f, v)| f.validate(v)))
     }
 }
 
-fn solve(passports: &[Passport]) -> usize {
-    passports.iter().filter(|p| p.is_valid()).count()
+fn solve(passports: &[Passport], check_value: bool) -> usize {
+    passports.iter().filter(|p| p.validate(check_value)).count()
 }
 
 pub fn run() -> Result<String, String> {
@@ -69,14 +108,31 @@ pub fn run() -> Result<String, String> {
         .split("\n\n")
         .map(|pass| pass.parse())
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = solve(&passports);
-    let out2 = "";
+    let out1 = solve(&passports, false);
+    let out2 = solve(&passports, true);
     Ok(format!("{} {}", out1, out2))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_valid() {
+        assert!(BYR.validate("2002"));
+        assert!(!BYR.validate("2003"));
+        assert!(HGT.validate("60in"));
+        assert!(HGT.validate("190cm"));
+        assert!(!HGT.validate("190in"));
+        assert!(!HGT.validate("190"));
+        assert!(HCL.validate("#123abc"));
+        assert!(!HCL.validate("#123abz"));
+        assert!(!HCL.validate("123abc"));
+        assert!(ECL.validate("brn"));
+        assert!(!ECL.validate("wat"));
+        assert!(PID.validate("000000001"));
+        assert!(!PID.validate("0123456789"));
+    }
 
     #[test]
     fn test01() {
@@ -95,6 +151,43 @@ mod tests {
         .iter()
         .map(|p| p.parse().unwrap())
         .collect();
-        assert_eq!(solve(&passports), 2)
+        assert_eq!(solve(&passports, false), 2)
+    }
+
+    #[test]
+    fn test02() {
+        let invalid: Vec<Passport> = [
+            "eyr:1972 cid:100\n\
+             hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926",
+            "iyr:2019\n\
+             hcl:#602927 eyr:1967 hgt:170cm\n\
+             ecl:grn pid:012533040 byr:1946",
+            "hcl:dab227 iyr:2012\n\
+             ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277",
+            "hgt:59cm ecl:zzz\n\
+             eyr:2038 hcl:74454a iyr:2023\n\
+             pid:3556412378 byr:2007",
+        ]
+        .iter()
+        .map(|p| p.parse().unwrap())
+        .collect();
+
+        let valid: Vec<Passport> = [
+            "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980\n\
+             hcl:#623a2f",
+            "eyr:2029 ecl:blu cid:129 byr:1989\n\
+             iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm",
+            "hcl:#888785\n\
+             hgt:164cm byr:2001 iyr:2015 cid:88\n\
+             pid:545766238 ecl:hzl\n\
+             eyr:2022",
+            "iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719",
+        ]
+        .iter()
+        .map(|p| p.parse().unwrap())
+        .collect();
+
+        assert_eq!(solve(&invalid, true), 0);
+        assert_eq!(solve(&valid, true), valid.len());
     }
 }
