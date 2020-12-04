@@ -3,6 +3,7 @@ use std::env;
 mod p01;
 mod p02;
 mod p03;
+mod p04;
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
@@ -15,6 +16,7 @@ fn main() -> Result<(), String> {
         Ok(1) => p01::run(),
         Ok(2) => p02::run(),
         Ok(3) => p03::run(),
+        Ok(4) => p04::run(),
         _ => Err("Invalid problem number".into()),
     }?;
     println!("{}", out);
