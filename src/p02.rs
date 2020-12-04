@@ -64,10 +64,10 @@ pub fn run() -> Result<String, String> {
     let mut xs: Vec<(Policy, &str)> = input
         .lines()
         .map(|x| {
-            let x: Vec<&str> = x.split(": ").collect();
-            (x[0].parse().unwrap(), x[1])
+            let x: Vec<_> = x.split(": ").collect();
+            Ok((x[0].parse()?, x[1]))
         })
-        .collect();
+        .collect::<Result<_, String>>()?;
     let out1 = solve(&xs);
     xs.iter_mut().for_each(|(policy, _)| policy.swap_mode());
     let out2 = solve(&xs);
