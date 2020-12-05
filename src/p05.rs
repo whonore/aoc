@@ -25,8 +25,18 @@ impl Ticket {
     }
 }
 
-fn solve(tickets: &[Ticket]) -> u16 {
-    tickets.iter().map(|ticket| ticket.uid()).max().unwrap_or(0)
+fn solve(tickets: &[Ticket], part1: bool) -> u16 {
+    let uids = tickets.iter().map(|ticket| ticket.uid());
+    if part1 {
+        uids.max().unwrap_or(0)
+    } else {
+        let mut uids = uids.collect::<Vec<_>>();
+        uids.sort();
+        uids.windows(2)
+            .find(|xs| xs[0] + 2 == xs[1])
+            .map(|xs| xs[0] + 1)
+            .unwrap_or(0)
+    }
 }
 
 pub fn run() -> Result<String, String> {
@@ -35,8 +45,8 @@ pub fn run() -> Result<String, String> {
         .lines()
         .map(|ticket| ticket.parse())
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = solve(&tickets);
-    let out2 = "";
+    let out1 = solve(&tickets, true);
+    let out2 = solve(&tickets, false);
     Ok(format!("{} {}", out1, out2))
 }
 
