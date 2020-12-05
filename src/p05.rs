@@ -57,11 +57,14 @@ mod tests {
     #[test]
     fn test01() {
         assert_eq!(
-            solve(&[
-                "BFFFBBFRRR".parse().unwrap(),
-                "FFFBBBFRRR".parse().unwrap(),
-                "BBFFBBFRLL".parse().unwrap(),
-            ]),
+            solve(
+                &[
+                    "BFFFBBFRRR".parse().unwrap(),
+                    "FFFBBBFRRR".parse().unwrap(),
+                    "BBFFBBFRLL".parse().unwrap(),
+                ],
+                true
+            ),
             820
         )
     }
