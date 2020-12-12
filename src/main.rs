@@ -11,6 +11,7 @@ mod p08;
 mod p09;
 mod p10;
 mod p11;
+mod p12;
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
@@ -31,6 +32,7 @@ fn main() -> Result<(), String> {
         Ok(9) => p09::run(),
         Ok(10) => p10::run(),
         Ok(11) => p11::run(),
+        Ok(12) => p12::run(),
         _ => Err("Invalid problem number".into()),
     }?;
     println!("{}", out);
