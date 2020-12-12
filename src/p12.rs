@@ -68,18 +68,30 @@ impl FromStr for Action {
     }
 }
 
+enum Mode {
+    Absolute,
+    Relative,
+}
+use Mode::*;
+
 struct Pos {
     x: i32,
     y: i32,
+    way_x: i32,
+    way_y: i32,
     dir: Dir,
+    mode: Mode,
 }
 
 impl Pos {
-    fn new() -> Self {
+    fn new(mode: Mode) -> Self {
         Pos {
             x: 0,
             y: 0,
+            way_x: 10,
+            way_y: 1,
             dir: East,
+            mode,
         }
     }
 
@@ -88,27 +100,51 @@ impl Pos {
     }
 
     fn go(&mut self, act: &Action) {
-        match act {
-            Go(dir, amt) => {
-                let dir = dir.unwrap_or(self.dir);
-                match dir {
-                    North => self.y += *amt as i32,
-                    South => self.y -= *amt as i32,
-                    East => self.x += *amt as i32,
-                    West => self.x -= *amt as i32,
+        match self.mode {
+            Absolute => match act {
+                Go(dir, amt) => {
+                    let dir = dir.unwrap_or(self.dir);
+                    match dir {
+                        North => self.y += *amt as i32,
+                        South => self.y -= *amt as i32,
+                        East => self.x += *amt as i32,
+                        West => self.x -= *amt as i32,
+                    }
                 }
-            }
-            Turn(rot, amt) => {
-                for _ in 0..*amt {
-                    self.dir += *rot;
+                Turn(rot, amt) => {
+                    for _ in 0..*amt {
+                        self.dir += *rot;
+                    }
                 }
-            }
+            },
+            Relative => match act {
+                Go(Some(dir), amt) => match dir {
+                    North => self.way_y += *amt as i32,
+                    South => self.way_y -= *amt as i32,
+                    East => self.way_x += *amt as i32,
+                    West => self.way_x -= *amt as i32,
+                },
+                Go(None, amt) => {
+                    self.x += (*amt as i32) * self.way_x;
+                    self.y += (*amt as i32) * self.way_y;
+                }
+                Turn(rot, amt) => {
+                    for _ in 0..*amt {
+                        let (x, y) = match rot {
+                            Left => (-self.way_y, self.way_x),
+                            Right => (self.way_y, -self.way_x),
+                        };
+                        self.way_x = x;
+                        self.way_y = y;
+                    }
+                }
+            },
         }
     }
 }
 
-fn solve(acts: &[Action]) -> u32 {
-    let mut pos = Pos::new();
+fn solve(acts: &[Action], mode: Mode) -> u32 {
+    let mut pos = Pos::new(mode);
     for act in acts {
         pos.go(act);
     }
@@ -121,8 +157,8 @@ pub fn run() -> Result<String, String> {
         .lines()
         .map(|act| act.parse::<Action>())
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = solve(&acts);
-    let out2 = "";
+    let out1 = solve(&acts, Absolute);
+    let out2 = solve(&acts, Relative);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -139,6 +175,18 @@ mod tests {
             Turn(Right, 1),
             Go(None, 11),
         ];
-        assert_eq!(solve(&acts), 25);
+        assert_eq!(solve(&acts, Absolute), 25);
+    }
+
+    #[test]
+    fn test02() {
+        let acts = [
+            Go(None, 10),
+            Go(Some(North), 3),
+            Go(None, 7),
+            Turn(Right, 1),
+            Go(None, 11),
+        ];
+        assert_eq!(solve(&acts, Relative), 286);
     }
 }
