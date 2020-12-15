@@ -49,7 +49,7 @@ pub fn run() -> Result<String, String> {
         .map(|x| x.parse::<usize>().unwrap())
         .collect::<Vec<_>>();
     let out1 = solve(&seq, 2020);
-    let out2 = "";
+    let out2 = solve(&seq, 30000000);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -66,5 +66,18 @@ mod tests {
         assert_eq!(solve(&[2, 3, 1], 2020), 78);
         assert_eq!(solve(&[3, 2, 1], 2020), 438);
         assert_eq!(solve(&[3, 1, 2], 2020), 1836);
+    }
+
+    // Too slow
+    #[test]
+    #[ignore]
+    fn test02() {
+        assert_eq!(solve(&[0, 3, 6], 30000000), 175594);
+        assert_eq!(solve(&[1, 3, 2], 30000000), 2578);
+        assert_eq!(solve(&[2, 1, 3], 30000000), 3544142);
+        assert_eq!(solve(&[1, 2, 3], 30000000), 261214);
+        assert_eq!(solve(&[2, 3, 1], 30000000), 6895259);
+        assert_eq!(solve(&[3, 2, 1], 30000000), 18);
+        assert_eq!(solve(&[3, 1, 2], 30000000), 362);
     }
 }
