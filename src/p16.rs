@@ -24,7 +24,7 @@ impl<A: FromStr> FromStr for Range<A> {
     }
 }
 
-struct Fields(HashMap<String, Vec<Range<u32>>>);
+struct Fields(HashMap<String, Vec<Range<u64>>>);
 
 impl FromStr for Fields {
     type Err = String;
@@ -49,47 +49,98 @@ impl FromStr for Fields {
 }
 
 impl Fields {
-    fn valid(&self, val: u32) -> bool {
+    fn valid(&self, val: u64) -> bool {
         self.0
             .values()
             .any(|ranges| ranges.iter().any(|r| r.contains(val)))
     }
+
+    fn valid_at(&self, field: &str, vals: &[u64]) -> bool {
+        vals.iter()
+            .all(|v| self.0[field].iter().any(|r| r.contains(*v)))
+    }
 }
 
-struct Ticket(Vec<u32>);
+struct Ticket(Vec<u64>);
 
 impl FromStr for Ticket {
     type Err = String;
 
     fn from_str(tick: &str) -> Result<Self, Self::Err> {
         Ok(Ticket(
-            tick.split(',').map(|x| x.parse::<u32>().unwrap()).collect(),
+            tick.split(',').map(|x| x.parse::<u64>().unwrap()).collect(),
         ))
     }
 }
 
 impl Ticket {
-    fn invalid(&self, fields: &Fields) -> Vec<u32> {
+    fn invalid(&self, fields: &Fields) -> Vec<u64> {
         self.0
             .iter()
             .filter(|v| !fields.valid(**v))
             .copied()
             .collect()
     }
+
+    fn valid(&self, fields: &Fields) -> bool {
+        self.invalid(fields).is_empty()
+    }
 }
 
 enum Mode {
     ErrorRate,
+    IdentifyFields,
 }
 use Mode::*;
 
-fn error_rate(fields: &Fields, ticks: &[Ticket]) -> u32 {
+fn error_rate(fields: &Fields, ticks: &[Ticket]) -> u64 {
     ticks.iter().flat_map(|tick| tick.invalid(fields)).sum()
 }
 
-fn solve(fields: &Fields, mytick: &Ticket, ticks: &[Ticket], mode: Mode) -> u32 {
+fn identify_fields(fields: &Fields, ticks: &[Ticket]) -> Vec<String> {
+    let ticks = ticks
+        .iter()
+        .filter(|tick| tick.valid(&fields))
+        .collect::<Vec<_>>();
+    let mut tick_fields = (0..ticks[0].0.len())
+        .map(|idx| {
+            let vs = ticks.iter().map(|tick| tick.0[idx]).collect::<Vec<_>>();
+            fields
+                .0
+                .keys()
+                .filter(|f| fields.valid_at(f, &vs))
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut done = tick_fields
+        .iter()
+        .filter(|fs| fs.len() == 1)
+        .map(|fs| fs[0])
+        .collect::<Vec<_>>();
+
+    while done.len() != fields.0.keys().len() {
+        for fs in tick_fields.iter_mut() {
+            if 1 < fs.len() {
+                fs.retain(|f| !done.contains(f));
+                if fs.len() == 1 {
+                    done.push(fs[0])
+                }
+            }
+        }
+    }
+
+    tick_fields.iter().map(|fs| fs[0]).cloned().collect()
+}
+
+fn solve(fields: &Fields, mytick: &Ticket, ticks: &[Ticket], mode: Mode) -> u64 {
     match mode {
         ErrorRate => error_rate(fields, ticks),
+        IdentifyFields => identify_fields(fields, ticks)
+            .iter()
+            .enumerate()
+            .filter(|(_, field)| field.starts_with("departure"))
+            .map(|(idx, _)| mytick.0[idx])
+            .product(),
     }
 }
 
@@ -112,7 +163,7 @@ pub fn run() -> Result<String, String> {
         .map(|line| line.parse::<Ticket>())
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&fields, &mytick, &ticks, ErrorRate);
-    let out2 = "";
+    let out2 = solve(&fields, &mytick, &ticks, IdentifyFields);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -132,7 +183,6 @@ mod tests {
             .cloned()
             .collect(),
         );
-
         let mytick = Ticket(vec![7, 1, 14]);
         let ticks = vec![
             Ticket(vec![7, 3, 47]),
@@ -141,5 +191,28 @@ mod tests {
             Ticket(vec![38, 6, 12]),
         ];
         assert_eq!(solve(&fields, &mytick, &ticks, ErrorRate), 71);
+    }
+
+    #[test]
+    fn test02() {
+        let fields = Fields(
+            [
+                ("class".to_string(), vec![Range(0, 1), Range(4, 19)]),
+                ("row".to_string(), vec![Range(0, 5), Range(8, 19)]),
+                ("seat".to_string(), vec![Range(0, 13), Range(16, 19)]),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
+        );
+        let ticks = vec![
+            Ticket(vec![3, 9, 18]),
+            Ticket(vec![15, 1, 5]),
+            Ticket(vec![5, 14, 9]),
+        ];
+        assert_eq!(
+            identify_fields(&fields, &ticks),
+            vec!["row", "class", "seat"]
+        )
     }
 }
