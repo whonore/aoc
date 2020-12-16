@@ -15,6 +15,16 @@ mod p12;
 mod p13;
 mod p14;
 mod p15;
+mod p16;
+mod p17;
+mod p18;
+mod p19;
+mod p20;
+mod p21;
+mod p22;
+mod p23;
+mod p24;
+mod p25;
 
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
@@ -39,6 +49,16 @@ fn main() -> Result<(), String> {
         Ok(13) => p13::run(),
         Ok(14) => p14::run(),
         Ok(15) => p15::run(),
+        Ok(16) => p16::run(),
+        Ok(17) => p17::run(),
+        Ok(18) => p18::run(),
+        Ok(19) => p19::run(),
+        Ok(20) => p20::run(),
+        Ok(21) => p21::run(),
+        Ok(22) => p22::run(),
+        Ok(23) => p23::run(),
+        Ok(24) => p24::run(),
+        Ok(25) => p25::run(),
         _ => Err("Invalid problem number".into()),
     }?;
     println!("{}", out);
