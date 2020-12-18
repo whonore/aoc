@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -34,7 +35,7 @@ impl FromStr for Token {
 
 #[derive(Debug)]
 struct Lexer {
-    toks: Vec<Token>,
+    toks: VecDeque<Token>,
     depth: u32,
 }
 
@@ -52,21 +53,6 @@ impl FromStr for Lexer {
     }
 }
 
-impl Lexer {
-    fn reverse(&mut self) {
-        self.toks = self
-            .toks
-            .iter()
-            .rev()
-            .map(|tok| match tok {
-                TLParen => TRParen,
-                TRParen => TLParen,
-                tok => *tok,
-            })
-            .collect()
-    }
-}
-
 #[derive(Debug)]
 enum Expr {
     BinOp(Op, Box<Expr>, Box<Expr>),
@@ -78,9 +64,8 @@ impl FromStr for Expr {
     type Err = String;
 
     fn from_str(e: &str) -> Result<Self, Self::Err> {
-        let mut lex = e.parse::<Lexer>()?;
-        lex.reverse();
-        Expr::try_from(&mut lex)
+        let toks = e.parse::<Lexer>()?;
+        Expr::try_from(toks)
     }
 }
 
@@ -100,47 +85,58 @@ impl Expr {
     }
 }
 
-fn pop_left<A>(xs: &mut Vec<A>) -> Option<A> {
-    if xs.is_empty() {
-        None
-    } else {
-        Some(xs.remove(0))
+/*
+ * expr -> expr + term | expr * term | term
+ * term -> INT | ( expr )
+ *
+ * expr -> term expr'
+ * expr' -> + term expr' | * term expr' | ϵ
+ * term -> INT | ( expr )
+ */
+impl TryFrom<Lexer> for Expr {
+    type Error = String;
+
+    fn try_from(mut lex: Lexer) -> Result<Self, Self::Error> {
+        parse_expr(&mut lex)
     }
 }
 
-impl TryFrom<&mut Lexer> for Expr {
-    type Error = String;
+fn parse_expr(lex: &mut Lexer) -> Result<Expr, String> {
+    let lhs = parse_term(lex)?;
+    parse_expr2(lhs, lex)
+}
 
-    fn try_from(mut lex: &mut Lexer) -> Result<Self, Self::Error> {
-        let lhs = match pop_left(&mut lex.toks) {
-            Some(TLParen) => {
-                lex.depth += 1;
-                // NOTE: Needed to satisfy the borrow checker
-                let lex = &mut *lex;
-                Expr::try_from(lex)
-            }
-            Some(TNumber(v)) => Ok(Scalar(v)),
-            Some(tok) => Err(format!("Expected term, found {:?}", tok)),
-            _ => Err("Expected term, found EOF".into()),
-        }?;
-        if let Some(op) = pop_left(&mut lex.toks) {
-            let op = match op {
-                TOp(op) => Ok(op),
-                TRParen => {
-                    if 0 < lex.depth {
-                        lex.depth -= 1;
-                        return Ok(lhs);
-                    } else {
-                        Err("Found unmatched )".into())
-                    }
+fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
+    if let Some(op) = lex.toks.pop_front() {
+        let op = match op {
+            TOp(op) => Ok(op),
+            TRParen => {
+                if 0 < lex.depth {
+                    lex.depth -= 1;
+                    return Ok(lhs);
+                } else {
+                    Err("Found unmatched )".into())
                 }
-                tok => Err(format!("Expected op, found {:?}", tok)),
-            }?;
-            let rhs = Expr::try_from(lex)?;
-            Ok(BinOp(op, Box::new(lhs), Box::new(rhs)))
-        } else {
-            Ok(lhs)
+            }
+            tok => Err(format!("Expected op, found {:?}", tok)),
+        }?;
+        let rhs = parse_term(lex)?;
+        let lhs = BinOp(op, Box::new(lhs), Box::new(rhs));
+        parse_expr2(lhs, lex)
+    } else {
+        Ok(lhs)
+    }
+}
+
+fn parse_term(lex: &mut Lexer) -> Result<Expr, String> {
+    match lex.toks.pop_front() {
+        Some(TNumber(v)) => Ok(Scalar(v)),
+        Some(TLParen) => {
+            lex.depth += 1;
+            parse_expr(lex)
         }
+        Some(tok) => Err(format!("Expected term, found {:?}", tok)),
+        _ => Err("Expected term, found EOF".into()),
     }
 }
 
