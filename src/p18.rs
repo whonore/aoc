@@ -60,15 +60,6 @@ enum Expr {
 }
 use Expr::*;
 
-impl FromStr for Expr {
-    type Err = String;
-
-    fn from_str(e: &str) -> Result<Self, Self::Err> {
-        let toks = e.parse::<Lexer>()?;
-        Expr::try_from(toks)
-    }
-}
-
 impl Expr {
     fn eval(&self) -> i64 {
         match self {
@@ -85,6 +76,17 @@ impl Expr {
     }
 }
 
+struct SamePrec(Expr);
+
+impl FromStr for SamePrec {
+    type Err = String;
+
+    fn from_str(e: &str) -> Result<Self, Self::Err> {
+        let toks = e.parse::<Lexer>()?;
+        Self::try_from(toks)
+    }
+}
+
 /*
  * expr -> expr + term | expr * term | term
  * term -> INT | ( expr )
@@ -93,50 +95,134 @@ impl Expr {
  * expr' -> + term expr' | * term expr' | ϵ
  * term -> INT | ( expr )
  */
-impl TryFrom<Lexer> for Expr {
+impl TryFrom<Lexer> for SamePrec {
     type Error = String;
 
     fn try_from(mut lex: Lexer) -> Result<Self, Self::Error> {
-        parse_expr(&mut lex)
+        Ok(Self(Self::parse_expr(&mut lex)?))
     }
 }
 
-fn parse_expr(lex: &mut Lexer) -> Result<Expr, String> {
-    let lhs = parse_term(lex)?;
-    parse_expr2(lhs, lex)
-}
+impl SamePrec {
+    fn parse_expr(lex: &mut Lexer) -> Result<Expr, String> {
+        let lhs = Self::parse_term(lex)?;
+        Self::parse_expr2(lhs, lex)
+    }
 
-fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
-    if let Some(op) = lex.toks.pop_front() {
-        let op = match op {
-            TOp(op) => Ok(op),
-            TRParen => {
-                if 0 < lex.depth {
-                    lex.depth -= 1;
-                    return Ok(lhs);
-                } else {
-                    Err("Found unmatched )".into())
+    fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
+        match lex.toks.front().copied() {
+            Some(TOp(op)) => {
+                lex.toks.pop_front();
+                let rhs = Self::parse_term(lex)?;
+                let lhs = BinOp(op, Box::new(lhs), Box::new(rhs));
+                Self::parse_expr2(lhs, lex)
+            }
+            _ => Ok(lhs),
+        }
+    }
+
+    fn parse_term(lex: &mut Lexer) -> Result<Expr, String> {
+        match lex.toks.pop_front() {
+            Some(TNumber(v)) => Ok(Scalar(v)),
+            Some(TLParen) => {
+                lex.depth += 1;
+                let e = Self::parse_expr(lex)?;
+                match lex.toks.pop_front() {
+                    Some(TRParen) => {
+                        lex.depth -= 1;
+                        Ok(e)
+                    }
+                    _ => Err("Found unmatched (".into()),
                 }
             }
-            tok => Err(format!("Expected op, found {:?}", tok)),
-        }?;
-        let rhs = parse_term(lex)?;
-        let lhs = BinOp(op, Box::new(lhs), Box::new(rhs));
-        parse_expr2(lhs, lex)
-    } else {
-        Ok(lhs)
+            Some(tok) => Err(format!("Expected term, found {:?}", tok)),
+            _ => Err("Expected term, found EOF".into()),
+        }
     }
 }
 
-fn parse_term(lex: &mut Lexer) -> Result<Expr, String> {
-    match lex.toks.pop_front() {
-        Some(TNumber(v)) => Ok(Scalar(v)),
-        Some(TLParen) => {
-            lex.depth += 1;
-            parse_expr(lex)
+struct DiffPrec(Expr);
+
+impl FromStr for DiffPrec {
+    type Err = String;
+
+    fn from_str(e: &str) -> Result<Self, Self::Err> {
+        let toks = e.parse::<Lexer>()?;
+        Self::try_from(toks)
+    }
+}
+
+/*
+ * expr -> expr * term | term
+ * term -> term + factor | factor
+ * factor -> INT | ( expr )
+ *
+ * expr -> term expr'
+ * expr' -> * term expr' | ϵ
+ * term -> factor term'
+ * term' -> + factor term' | ϵ
+ * factor -> INT | ( expr )
+ */
+impl TryFrom<Lexer> for DiffPrec {
+    type Error = String;
+
+    fn try_from(mut lex: Lexer) -> Result<Self, Self::Error> {
+        Ok(Self(Self::parse_expr(&mut lex)?))
+    }
+}
+
+impl DiffPrec {
+    fn parse_expr(lex: &mut Lexer) -> Result<Expr, String> {
+        let lhs = Self::parse_term(lex)?;
+        Self::parse_expr2(lhs, lex)
+    }
+
+    fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
+        match lex.toks.front() {
+            Some(TOp(Mult)) => {
+                lex.toks.pop_front();
+                let rhs = Self::parse_term(lex)?;
+                let lhs = BinOp(Mult, Box::new(lhs), Box::new(rhs));
+                Self::parse_expr2(lhs, lex)
+            }
+            _ => Ok(lhs),
         }
-        Some(tok) => Err(format!("Expected term, found {:?}", tok)),
-        _ => Err("Expected term, found EOF".into()),
+    }
+
+    fn parse_term(lex: &mut Lexer) -> Result<Expr, String> {
+        let lhs = Self::parse_factor(lex)?;
+        Self::parse_term2(lhs, lex)
+    }
+
+    fn parse_term2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
+        match lex.toks.front() {
+            Some(TOp(Plus)) => {
+                lex.toks.pop_front();
+                let rhs = Self::parse_factor(lex)?;
+                let lhs = BinOp(Plus, Box::new(lhs), Box::new(rhs));
+                Self::parse_term2(lhs, lex)
+            }
+            _ => Ok(lhs),
+        }
+    }
+
+    fn parse_factor(lex: &mut Lexer) -> Result<Expr, String> {
+        match lex.toks.pop_front() {
+            Some(TNumber(v)) => Ok(Scalar(v)),
+            Some(TLParen) => {
+                lex.depth += 1;
+                let e = Self::parse_expr(lex)?;
+                match lex.toks.pop_front() {
+                    Some(TRParen) => {
+                        lex.depth -= 1;
+                        Ok(e)
+                    }
+                    _ => Err("Found unmatched (".into()),
+                }
+            }
+            Some(tok) => Err(format!("Expected factor, found {:?}", tok)),
+            _ => Err("Expected term, found EOF".into()),
+        }
     }
 }
 
@@ -148,10 +234,14 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p18.txt");
     let exps = input
         .lines()
-        .map(|x| x.parse::<Expr>())
+        .map(|x| x.parse::<SamePrec>().map(|e| e.0))
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&exps);
-    let out2 = "";
+    let exps = input
+        .lines()
+        .map(|x| x.parse::<DiffPrec>().map(|e| e.0))
+        .collect::<Result<Vec<_>, _>>()?;
+    let out2 = solve(&exps);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -161,29 +251,95 @@ mod tests {
 
     #[test]
     fn test01() {
-        assert_eq!("2".parse::<Expr>().unwrap().eval(), 2);
-        assert_eq!("(2)".parse::<Expr>().unwrap().eval(), 2);
-        assert_eq!("2 * 3 + (4 * 5)".parse::<Expr>().unwrap().eval(), 26);
+        assert_eq!("2".parse::<SamePrec>().unwrap().0.eval(), 2);
+        assert_eq!("(2)".parse::<SamePrec>().unwrap().0.eval(), 2);
+        assert_eq!(
+            "1 + 2 * 3 + 4 * 5 + 6"
+                .parse::<SamePrec>()
+                .unwrap()
+                .0
+                .eval(),
+            71
+        );
+        assert_eq!(
+            "1 + (2 * 3) + (4 * (5 + 6))"
+                .parse::<SamePrec>()
+                .unwrap()
+                .0
+                .eval(),
+            51
+        );
+        assert_eq!("2 * 3 + (4 * 5)".parse::<SamePrec>().unwrap().0.eval(), 26);
         assert_eq!(
             "5 + (8 * 3 + 9 + 3 * 4 * 3)"
-                .parse::<Expr>()
+                .parse::<SamePrec>()
                 .unwrap()
+                .0
                 .eval(),
             437
         );
         assert_eq!(
             "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"
-                .parse::<Expr>()
+                .parse::<SamePrec>()
                 .unwrap()
+                .0
                 .eval(),
             12240
         );
         assert_eq!(
             "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
-                .parse::<Expr>()
+                .parse::<SamePrec>()
                 .unwrap()
+                .0
                 .eval(),
             13632
+        );
+    }
+
+    #[test]
+    fn test02() {
+        assert_eq!("2".parse::<DiffPrec>().unwrap().0.eval(), 2);
+        assert_eq!("(2)".parse::<DiffPrec>().unwrap().0.eval(), 2);
+        assert_eq!(
+            "1 + 2 * 3 + 4 * 5 + 6"
+                .parse::<DiffPrec>()
+                .unwrap()
+                .0
+                .eval(),
+            231
+        );
+        assert_eq!(
+            "1 + (2 * 3) + (4 * (5 + 6))"
+                .parse::<DiffPrec>()
+                .unwrap()
+                .0
+                .eval(),
+            51
+        );
+        assert_eq!("2 * 3 + (4 * 5)".parse::<DiffPrec>().unwrap().0.eval(), 46);
+        assert_eq!(
+            "5 + (8 * 3 + 9 + 3 * 4 * 3)"
+                .parse::<DiffPrec>()
+                .unwrap()
+                .0
+                .eval(),
+            1445
+        );
+        assert_eq!(
+            "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"
+                .parse::<DiffPrec>()
+                .unwrap()
+                .0
+                .eval(),
+            669060
+        );
+        assert_eq!(
+            "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"
+                .parse::<DiffPrec>()
+                .unwrap()
+                .0
+                .eval(),
+            23340
         );
     }
 }
