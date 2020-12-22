@@ -59,7 +59,7 @@ impl FromStr for Tile {
                     .collect()
             })
             .collect::<Result<_, _>>()?;
-        Ok(Tile { id, pix })
+        Ok(Self { id, pix })
     }
 }
 
@@ -80,11 +80,14 @@ impl Tile {
 
     fn rotate(&self) -> Self {
         let mut tile = self.clone();
+        let height = tile.pix.len();
         let width = tile.pix[0].len();
-        let mut pix = tile.pix.clone();
+        let mut pix: Vec<Vec<_>> = iter::repeat(iter::repeat(Pixel::Off).take(height).collect())
+            .take(width)
+            .collect();
         for (r, row) in tile.pix.iter().enumerate() {
             for (c, p) in row.iter().enumerate() {
-                pix[c][width - 1 - r] = *p;
+                pix[c][height - 1 - r] = *p;
             }
         }
         tile.pix = pix;
@@ -112,8 +115,31 @@ impl Tile {
         }
     }
 
-    fn aligns(&self, tile: &Tile, side: Side) -> bool {
+    fn aligns(&self, tile: &Self, side: Side) -> bool {
         self.border(side) == tile.border(side.opp())
+    }
+
+    fn strip_borders(&self) -> Self {
+        let pix = self.pix[1..self.pix.len() - 1]
+            .iter()
+            .map(|row| row[1..row.len() - 1].to_vec())
+            .collect();
+        Self { id: 0, pix }
+    }
+
+    fn join(&self, tile: &Self, side: Side) -> Self {
+        let mut out = self.clone();
+        let mut tile = tile.clone();
+        match side {
+            Right => {
+                for (r, row) in out.pix.iter_mut().enumerate() {
+                    row.append(&mut tile.pix[r]);
+                }
+            }
+            Bottom => out.pix.append(&mut tile.pix),
+            _ => panic!("join not implemented for {:?}", side),
+        }
+        out
     }
 }
 
@@ -176,13 +202,74 @@ impl TileGrid {
     }
 }
 
-fn solve(tiles: &[Tile]) -> u64 {
+fn count_on(pix: &[Vec<Pixel>]) -> usize {
+    pix.iter()
+        .map(|row| row.iter().filter(|p| **p == On).count())
+        .sum()
+}
+
+struct Image(Vec<Vec<Pixel>>);
+
+impl Image {
+    fn new(grid: &TileGrid) -> Self {
+        let mut tiles = grid.0.iter().map(|row| {
+            let mut tiles = row.iter().map(|tile| tile.strip_borders());
+            let first = tiles.next().unwrap();
+            tiles.fold(first, |tiles, tile| tiles.join(&tile, Right))
+        });
+        let first = tiles.next().unwrap();
+        let tiles = tiles.fold(first, |tiles, tile| tiles.join(&tile, Bottom));
+        Image(tiles.pix)
+    }
+
+    fn find(&self, pattern: &Tile) -> usize {
+        let mut matches = 0;
+        let pheight = pattern.pix.len();
+        let pwidth = pattern.pix[0].len();
+        let height = self.0.len();
+        let width = self.0[0].len();
+        for r in 0..height - pheight {
+            for c in 0..width - pwidth {
+                if pattern
+                    .pix
+                    .iter()
+                    .enumerate()
+                    .all(|(pr, prow)| Self::row_match(&prow, &self.0[r + pr][c..c + pwidth]))
+                {
+                    matches += 1;
+                }
+            }
+        }
+        matches
+    }
+
+    fn row_match(pattern: &[Pixel], row: &[Pixel]) -> bool {
+        pattern
+            .iter()
+            .zip(row)
+            .all(|(pat, pix)| *pat == Off || pat == pix)
+    }
+}
+
+fn solve(tiles: &[Tile]) -> (u64, usize) {
+    let monster = "Tile 0:\n\
+                   ..................#.\n\
+                   #....##....##....###\n\
+                   .#..#..#..#..#..#..."
+        .parse::<Tile>()
+        .unwrap();
+    let monsters = monster.variants();
     let grid = TileGrid::new(tiles);
     let nw = &grid.0[0][0];
     let ne = &grid.0[0][grid.size() - 1];
     let se = &grid.0[grid.size() - 1][grid.size() - 1];
     let sw = &grid.0[grid.size() - 1][0];
-    nw.id * ne.id * se.id * sw.id
+    let img = Image::new(&grid);
+    let nmonsters: usize = monsters.iter().map(|m| img.find(m)).sum();
+    (
+        nw.id * ne.id * se.id * sw.id,
+        count_on(&img.0) - nmonsters * count_on(&monster.pix),
+    )
 }
 
 pub fn run() -> Result<String, String> {
@@ -191,8 +278,7 @@ pub fn run() -> Result<String, String> {
         .split("\n\n")
         .map(|tile| tile.parse::<Tile>())
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = solve(&tiles);
-    let out2 = "";
+    let (out1, out2) = solve(&tiles);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -353,6 +439,6 @@ mod tests {
         .iter()
         .map(|tile| tile.parse::<Tile>().unwrap())
         .collect::<Vec<_>>();
-        assert_eq!(solve(&tiles), 20899048083289);
+        assert_eq!(solve(&tiles), (20899048083289, 273));
     }
 }
