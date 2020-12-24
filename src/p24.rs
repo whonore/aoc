@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::ops::AddAssign;
 use std::str::FromStr;
@@ -85,11 +85,85 @@ impl FromStr for Coord {
     }
 }
 
-fn solve(coords: &[Coord]) -> usize {
-    counter(coords.iter())
-        .iter()
-        .filter(|(_, nflip)| **nflip % 2 == 1)
-        .count()
+impl Coord {
+    fn new(x: isize, y: isize, z: isize) -> Self {
+        Coord { x, y, z }
+    }
+
+    fn neighbors(&self) -> [Coord; 6] {
+        [
+            Coord::new(self.x + 1, self.y, self.z - 1),
+            Coord::new(self.x + 1, self.y - 1, self.z),
+            Coord::new(self.x, self.y - 1, self.z + 1),
+            Coord::new(self.x - 1, self.y, self.z + 1),
+            Coord::new(self.x - 1, self.y + 1, self.z),
+            Coord::new(self.x, self.y + 1, self.z - 1),
+        ]
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct Tiles(HashSet<Coord>);
+
+impl Tiles {
+    fn new(coords: &[Coord]) -> Self {
+        Self(
+            counter(coords.iter())
+                .iter()
+                .filter_map(|(coord, nflip)| if *nflip % 2 == 1 { Some(**coord) } else { None })
+                .collect(),
+        )
+    }
+
+    fn count(&self) -> usize {
+        self.0.len()
+    }
+
+    fn day(&mut self) {
+        let towhite = self
+            .0
+            .iter()
+            .filter(|coord| {
+                let neighs = coord
+                    .neighbors()
+                    .iter()
+                    .filter(|neigh| self.0.contains(neigh))
+                    .count();
+                neighs == 0 || 2 < neighs
+            })
+            .copied()
+            .collect::<HashSet<_>>();
+        let toblack = self
+            .0
+            .iter()
+            .flat_map(|coord| coord.neighbors().to_vec())
+            .filter(|coord| {
+                coord
+                    .neighbors()
+                    .iter()
+                    .filter(|neigh| self.0.contains(neigh))
+                    .count()
+                    == 2
+            })
+            .collect::<HashSet<_>>();
+        self.0 = self
+            .0
+            .difference(&towhite)
+            .copied()
+            .collect::<HashSet<_>>()
+            .union(&toblack)
+            .copied()
+            .collect();
+    }
+}
+
+fn solve(coords: &[Coord]) -> (usize, usize) {
+    let mut tiles = Tiles::new(coords);
+    let start = tiles.count();
+    for _ in 0..100 {
+        tiles.day();
+    }
+    (start, tiles.count())
 }
 
 pub fn run() -> Result<String, String> {
@@ -98,8 +172,7 @@ pub fn run() -> Result<String, String> {
         .lines()
         .map(|x| x.parse::<Coord>())
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = solve(&locs);
-    let out2 = "";
+    let (out1, out2) = solve(&locs);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -134,6 +207,6 @@ mod tests {
         .iter()
         .map(|loc| loc.parse::<Coord>().unwrap())
         .collect::<Vec<_>>();
-        assert_eq!(solve(&locs), 10);
+        assert_eq!(solve(&locs), (10, 2208));
     }
 }
