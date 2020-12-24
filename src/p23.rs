@@ -73,7 +73,7 @@ impl Game {
             .skip_while(|cup| **cup != find)
             .skip(1)
             .take(n)
-            .cloned()
+            .copied()
             .collect()
     }
 }

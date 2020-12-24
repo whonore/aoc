@@ -63,7 +63,7 @@ impl<D: Dimension> Point<D> {
             ps: [x, y]
                 .iter()
                 .copied()
-                .chain(iter::repeat(0i64).take(D::DIMS as usize - 2))
+                .chain(vec![0i64; D::DIMS as usize - 2])
                 .collect(),
             dim: PhantomData,
         }

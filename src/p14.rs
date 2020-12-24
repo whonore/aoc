@@ -154,7 +154,6 @@ fn solve(seqs: &[Seq], mode: Mode) -> u64 {
                         .expand()
                         .iter()
                         .copied()
-                        // .map(|x| *x)
                         .zip(iter::repeat(mem.1))
                         .collect::<Vec<_>>()
                 })

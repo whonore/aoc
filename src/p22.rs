@@ -22,8 +22,8 @@ fn round(deck1: &mut Deck, deck2: &mut Deck, mode: Mode) -> Player {
     let c1 = deck1.pop_front().unwrap();
     let c2 = deck2.pop_front().unwrap();
     let winner = if mode == Recursive && c1 <= deck1.len() && c2 <= deck2.len() {
-        let mut deck1 = deck1.iter().take(c1).cloned().collect();
-        let mut deck2 = deck2.iter().take(c2).cloned().collect();
+        let mut deck1 = deck1.iter().take(c1).copied().collect();
+        let mut deck2 = deck2.iter().take(c2).copied().collect();
         play(&mut deck1, &mut deck2, mode)
     } else if c1 < c2 {
         P2
@@ -97,22 +97,22 @@ mod tests {
 
     #[test]
     fn test01() {
-        let mut deck1 = [9, 2, 6, 3, 1].iter().cloned().collect::<Deck>();
-        let mut deck2 = [5, 8, 4, 7, 10].iter().cloned().collect::<Deck>();
+        let mut deck1 = [9, 2, 6, 3, 1].iter().copied().collect::<Deck>();
+        let mut deck2 = [5, 8, 4, 7, 10].iter().copied().collect::<Deck>();
         assert_eq!(solve(&mut deck1, &mut deck2, Regular), 306);
     }
 
     #[test]
     fn test02() {
-        let mut deck1 = [9, 2, 6, 3, 1].iter().cloned().collect::<Deck>();
-        let mut deck2 = [5, 8, 4, 7, 10].iter().cloned().collect::<Deck>();
+        let mut deck1 = [9, 2, 6, 3, 1].iter().copied().collect::<Deck>();
+        let mut deck2 = [5, 8, 4, 7, 10].iter().copied().collect::<Deck>();
         assert_eq!(solve(&mut deck1, &mut deck2, Recursive), 291);
     }
 
     #[test]
     fn test_inf() {
-        let mut deck1 = [43, 19].iter().cloned().collect::<Deck>();
-        let mut deck2 = [2, 29, 14].iter().cloned().collect::<Deck>();
+        let mut deck1 = [43, 19].iter().copied().collect::<Deck>();
+        let mut deck2 = [2, 29, 14].iter().copied().collect::<Deck>();
         assert_eq!(play(&mut deck1, &mut deck2, Recursive), Infinite);
     }
 }

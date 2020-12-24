@@ -7,15 +7,15 @@ fn find_sum(n: u32, tgt: u32, xs: &[u32]) -> Option<Vec<u32>> {
         };
     }
 
-    for (i, x) in xs.iter().enumerate() {
+    let (x, mut ys) = xs.iter().enumerate().find_map(|(i, x)| {
         if *x < tgt {
-            if let Some(mut ys) = find_sum(n - 1, tgt - x, &xs[i + 1..]) {
-                ys.push(*x);
-                return Some(ys);
-            }
+            Some((x, find_sum(n - 1, tgt - x, &xs[i + 1..])?))
+        } else {
+            None
         }
-    }
-    None
+    })?;
+    ys.push(*x);
+    Some(ys)
 }
 
 fn solve(n: u32, xs: &[u32]) -> Option<u32> {

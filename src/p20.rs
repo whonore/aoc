@@ -28,6 +28,52 @@ impl Side {
     }
 }
 
+struct TileTransformer {
+    tile: Tile,
+    rotates: u8,
+    flipped: bool,
+}
+
+impl TileTransformer {
+    fn new(tile: &Tile) -> Self {
+        Self {
+            tile: tile.clone(),
+            rotates: 0,
+            flipped: false,
+        }
+    }
+
+    fn rotate(mut self, n: u8) -> Self {
+        self.rotates = (self.rotates + n) % 4;
+        self
+    }
+
+    fn flip(mut self) -> Self {
+        self.flipped = !self.flipped;
+        self
+    }
+
+    fn build(mut self) -> Tile {
+        for _ in 0..self.rotates {
+            let height = self.tile.pix.len();
+            let width = self.tile.pix[0].len();
+            let mut pix = vec![vec![Off; height]; width];
+            for (r, row) in self.tile.pix.iter().enumerate() {
+                for (c, p) in row.iter().enumerate() {
+                    pix[c][height - 1 - r] = *p;
+                }
+            }
+            self.tile.pix = pix;
+        }
+        if self.flipped {
+            for row in self.tile.pix.iter_mut() {
+                row.reverse();
+            }
+        }
+        self.tile
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 struct Tile {
     id: u64,
@@ -64,42 +110,21 @@ impl FromStr for Tile {
 }
 
 impl Tile {
-    fn variants(&self) -> Vec<Self> {
-        // TODO: lots of unnecessary cloning
-        vec![
+    fn variants(&self) -> [Self; 8] {
+        [
             self.clone(),
-            self.flip(),
-            self.rotate(),
-            self.rotate().flip(),
-            self.rotate().rotate(),
-            self.rotate().rotate().flip(),
-            self.rotate().rotate().rotate(),
-            self.rotate().rotate().rotate().flip(),
+            self.trans().flip().build(),
+            self.trans().rotate(1).build(),
+            self.trans().rotate(1).flip().build(),
+            self.trans().rotate(2).build(),
+            self.trans().rotate(2).flip().build(),
+            self.trans().rotate(3).build(),
+            self.trans().rotate(3).flip().build(),
         ]
     }
 
-    fn rotate(&self) -> Self {
-        let mut tile = self.clone();
-        let height = tile.pix.len();
-        let width = tile.pix[0].len();
-        let mut pix: Vec<Vec<_>> = iter::repeat(iter::repeat(Pixel::Off).take(height).collect())
-            .take(width)
-            .collect();
-        for (r, row) in tile.pix.iter().enumerate() {
-            for (c, p) in row.iter().enumerate() {
-                pix[c][height - 1 - r] = *p;
-            }
-        }
-        tile.pix = pix;
-        tile
-    }
-
-    fn flip(&self) -> Self {
-        let mut tile = self.clone();
-        for row in tile.pix.iter_mut() {
-            row.reverse();
-        }
-        tile
+    fn trans(&self) -> TileTransformer {
+        TileTransformer::new(self)
     }
 
     fn border(&self, side: Side) -> Vec<Pixel> {
@@ -155,7 +180,7 @@ impl TileGrid {
         let size = (tiles.len() as f64).sqrt() as usize;
         let tiles = tiles
             .iter()
-            .flat_map(|tile| tile.variants())
+            .flat_map(|tile| tile.variants().to_vec())
             .collect::<Vec<_>>();
         let mut init = TileGrid(
             iter::repeat(iter::repeat(Default::default()).take(size).collect())
@@ -310,7 +335,7 @@ mod tests {
                     ####"
             .parse::<Tile>()
             .unwrap();
-        assert_eq!(tile, tile.rotate().rotate().rotate().rotate());
+        assert_eq!(tile, tile.trans().rotate(4).build());
     }
 
     #[test]
@@ -329,8 +354,8 @@ mod tests {
                      ####"
             .parse::<Tile>()
             .unwrap();
-        assert_eq!(tile1.flip(), tile2);
-        assert_eq!(tile1, tile1.flip().flip());
+        assert_eq!(tile1.trans().flip().build(), tile2);
+        assert_eq!(tile1, tile1.trans().flip().flip().build());
     }
 
     #[test]
