@@ -6,8 +6,8 @@ use std::str::FromStr;
 struct Range<A>(A, A);
 
 impl<A: PartialOrd> Range<A> {
-    fn contains(&self, x: A) -> bool {
-        self.0 <= x && x <= self.1
+    fn contains(&self, x: &A) -> bool {
+        self.0 <= *x && *x <= self.1
     }
 }
 
@@ -20,7 +20,7 @@ impl<A: FromStr> FromStr for Range<A> {
             .map(|x| x.parse::<A>().map_err(|_| "Invalid range"));
         let min = range.next().unwrap()?;
         let max = range.next().unwrap()?;
-        Ok(Range(min, max))
+        Ok(Self(min, max))
     }
 }
 
@@ -39,12 +39,12 @@ impl FromStr for Fields {
                     .next()
                     .unwrap()
                     .split(" or ")
-                    .map(|r| r.parse::<Range<_>>())
+                    .map(str::parse)
                     .collect::<Result<_, _>>()?;
                 Ok((name.to_string(), ranges))
             })
             .collect::<Result<_, String>>()?;
-        Ok(Fields(fields))
+        Ok(Self(fields))
     }
 }
 
@@ -52,12 +52,12 @@ impl Fields {
     fn valid(&self, val: u64) -> bool {
         self.0
             .values()
-            .any(|ranges| ranges.iter().any(|r| r.contains(val)))
+            .any(|ranges| ranges.iter().any(|r| r.contains(&val)))
     }
 
     fn valid_at(&self, field: &str, vals: &[u64]) -> bool {
         vals.iter()
-            .all(|v| self.0[field].iter().any(|r| r.contains(*v)))
+            .all(|v| self.0[field].iter().any(|r| r.contains(v)))
     }
 }
 
@@ -67,7 +67,7 @@ impl FromStr for Ticket {
     type Err = String;
 
     fn from_str(tick: &str) -> Result<Self, Self::Err> {
-        Ok(Ticket(
+        Ok(Self(
             tick.split(',').map(|x| x.parse::<u64>().unwrap()).collect(),
         ))
     }
@@ -87,6 +87,7 @@ impl Ticket {
     }
 }
 
+#[derive(Copy, Clone)]
 enum Mode {
     ErrorRate,
     IdentifyFields,
@@ -100,7 +101,7 @@ fn error_rate(fields: &Fields, ticks: &[Ticket]) -> u64 {
 fn identify_fields(fields: &Fields, ticks: &[Ticket]) -> Vec<String> {
     let ticks = ticks
         .iter()
-        .filter(|tick| tick.valid(&fields))
+        .filter(|tick| tick.valid(fields))
         .collect::<Vec<_>>();
     let mut tick_fields = (0..ticks[0].0.len())
         .map(|idx| {
@@ -119,7 +120,7 @@ fn identify_fields(fields: &Fields, ticks: &[Ticket]) -> Vec<String> {
         .collect::<Vec<_>>();
 
     while done.len() != fields.0.keys().len() {
-        for fs in tick_fields.iter_mut() {
+        for fs in &mut tick_fields {
             if 1 < fs.len() {
                 fs.retain(|f| !done.contains(f));
                 if fs.len() == 1 {
@@ -160,7 +161,7 @@ pub fn run() -> Result<String, String> {
         .unwrap()
         .lines()
         .skip(1)
-        .map(|line| line.parse::<Ticket>())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&fields, &mytick, &ticks, ErrorRate);
     let out2 = solve(&fields, &mytick, &ticks, IdentifyFields);

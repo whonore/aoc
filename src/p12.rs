@@ -22,14 +22,10 @@ impl Add<Rotate> for Dir {
 
     fn add(self, rot: Rotate) -> Self {
         match (self, rot) {
-            (North, Left) => West,
-            (North, Right) => East,
-            (East, Left) => North,
-            (East, Right) => South,
-            (South, Left) => East,
-            (South, Right) => West,
-            (West, Left) => South,
-            (West, Right) => North,
+            (East, Left) | (West, Right) => North,
+            (North, Right) | (South, Left) => East,
+            (North, Left) | (South, Right) => West,
+            (East, Right) | (West, Left) => South,
         }
     }
 }
@@ -84,8 +80,8 @@ struct Pos {
 }
 
 impl Pos {
-    fn new(mode: Mode) -> Self {
-        Pos {
+    const fn new(mode: Mode) -> Self {
+        Self {
             x: 0,
             y: 0,
             way_x: 10,
@@ -95,41 +91,41 @@ impl Pos {
         }
     }
 
-    fn abs(&self) -> u32 {
+    const fn abs(&self) -> u32 {
         (self.x.abs() + self.y.abs()) as u32
     }
 
-    fn go(&mut self, act: &Action) {
+    fn go(&mut self, act: Action) {
         match self.mode {
             Absolute => match act {
                 Go(dir, amt) => {
                     let dir = dir.unwrap_or(self.dir);
                     match dir {
-                        North => self.y += *amt as i32,
-                        South => self.y -= *amt as i32,
-                        East => self.x += *amt as i32,
-                        West => self.x -= *amt as i32,
+                        North => self.y += amt as i32,
+                        South => self.y -= amt as i32,
+                        East => self.x += amt as i32,
+                        West => self.x -= amt as i32,
                     }
                 }
                 Turn(rot, amt) => {
-                    for _ in 0..*amt {
-                        self.dir += *rot;
+                    for _ in 0..amt {
+                        self.dir += rot;
                     }
                 }
             },
             Relative => match act {
                 Go(Some(dir), amt) => match dir {
-                    North => self.way_y += *amt as i32,
-                    South => self.way_y -= *amt as i32,
-                    East => self.way_x += *amt as i32,
-                    West => self.way_x -= *amt as i32,
+                    North => self.way_y += amt as i32,
+                    South => self.way_y -= amt as i32,
+                    East => self.way_x += amt as i32,
+                    West => self.way_x -= amt as i32,
                 },
                 Go(None, amt) => {
-                    self.x += (*amt as i32) * self.way_x;
-                    self.y += (*amt as i32) * self.way_y;
+                    self.x += (amt as i32) * self.way_x;
+                    self.y += (amt as i32) * self.way_y;
                 }
                 Turn(rot, amt) => {
-                    for _ in 0..*amt {
+                    for _ in 0..amt {
                         let (x, y) = match rot {
                             Left => (-self.way_y, self.way_x),
                             Right => (self.way_y, -self.way_x),
@@ -146,7 +142,7 @@ impl Pos {
 fn solve(acts: &[Action], mode: Mode) -> u32 {
     let mut pos = Pos::new(mode);
     for act in acts {
-        pos.go(act);
+        pos.go(*act);
     }
     pos.abs()
 }
@@ -155,7 +151,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p12.txt");
     let acts = input
         .lines()
-        .map(|act| act.parse::<Action>())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&acts, Absolute);
     let out2 = solve(&acts, Relative);

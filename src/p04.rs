@@ -55,14 +55,11 @@ impl Field {
             BYR => in_range(val, 1920, 2002),
             IYR => in_range(val, 2010, 2020),
             EYR => in_range(val, 2020, 2030),
-            HGT => HGT_RE
-                .captures(val)
-                .map(|caps| match &caps[2] {
-                    "cm" => in_range(&caps[1], 150, 193),
-                    "in" => in_range(&caps[1], 59, 76),
-                    _ => false,
-                })
-                .unwrap_or(false),
+            HGT => HGT_RE.captures(val).map_or(false, |caps| match &caps[2] {
+                "cm" => in_range(&caps[1], 150, 193),
+                "in" => in_range(&caps[1], 59, 76),
+                _ => false,
+            }),
             HCL => HCL_RE.is_match(val),
             ECL => ECL_RE.is_match(val),
             PID => PID_RE.is_match(val),
@@ -106,7 +103,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p04.txt");
     let passports = input
         .split("\n\n")
-        .map(|pass| pass.parse())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&passports, false);
     let out2 = solve(&passports, true);

@@ -34,7 +34,7 @@ impl FromStr for Foods {
     type Err = String;
 
     fn from_str(foods: &str) -> Result<Self, Self::Err> {
-        Ok(Foods::new(
+        Ok(Self::new(
             &foods
                 .lines()
                 .map(|line| {
@@ -56,7 +56,7 @@ impl Foods {
         let ingredients = counter(
             foods
                 .iter()
-                .flat_map(|(ings, _)| ings.iter().map(|ing| ing.to_string())),
+                .flat_map(|(ings, _)| ings.iter().map(|ing| (*ing).to_string())),
         );
         let mut mapping = HashMap::<&str, HashSet<&str>>::new();
         for (ings, algs) in foods {
@@ -85,7 +85,7 @@ impl Foods {
                 break;
             }
 
-            for (_, algs) in mapping.iter_mut() {
+            for algs in mapping.values_mut() {
                 if 1 < algs.len() {
                     *algs = algs.difference(&singles).cloned().collect();
                 }
@@ -96,13 +96,13 @@ impl Foods {
             .iter()
             .map(|(ing, algs)| {
                 (
-                    ing.to_string(),
-                    extract_singleton(algs).unwrap().to_string(),
+                    (*ing).to_string(),
+                    (*extract_singleton(algs).unwrap()).to_string(),
                 )
             })
             .collect::<HashMap<_, _>>();
 
-        Foods {
+        Self {
             ingredients,
             mapping,
         }

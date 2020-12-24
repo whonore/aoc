@@ -81,7 +81,7 @@ impl Rules {
     fn strip_match<'a>(&self, rule: &Rule, s: &'a str) -> Option<Vec<&'a str>> {
         match rule {
             Char(c) => s.strip_prefix(*c).map(|rest| vec![rest]),
-            Ref(r) => self.strip_match(&self.0[&r], s),
+            Ref(r) => self.strip_match(&self.0[r], s),
             Concat(rs) => non_empty(rs.iter().fold(vec![s], |rests, r| {
                 rests
                     .iter()
@@ -100,8 +100,7 @@ impl Rules {
 
     fn matches(&self, rule: u32, s: &str) -> bool {
         self.strip_match(&self.0[&rule], s)
-            .map(|rests| rests.iter().any(|rest| rest.is_empty()))
-            .unwrap_or(false)
+            .map_or(false, |rests| rests.iter().any(|rest| rest.is_empty()))
     }
 }
 
@@ -109,7 +108,7 @@ impl FromStr for Rules {
     type Err = String;
 
     fn from_str(rules: &str) -> Result<Self, Self::Err> {
-        Ok(Rules(
+        Ok(Self(
             rules
                 .lines()
                 .map(|line| {

@@ -15,18 +15,18 @@ impl FromStr for Ticket {
             .map_err(|_| "Failed to parse row")?;
         let col = u8::from_str_radix(&col.replace("L", "0").replace("R", "1"), 2)
             .map_err(|_| "Failed to parse col")?;
-        Ok(Ticket { row, col })
+        Ok(Self { row, col })
     }
 }
 
 impl Ticket {
-    fn uid(&self) -> u16 {
+    const fn uid(&self) -> u16 {
         (self.row as u16) * 8 + (self.col as u16)
     }
 }
 
 fn solve(tickets: &[Ticket], part1: bool) -> u16 {
-    let uids = tickets.iter().map(|ticket| ticket.uid());
+    let uids = tickets.iter().map(Ticket::uid);
     if part1 {
         uids.max().unwrap_or(0)
     } else {
@@ -34,8 +34,7 @@ fn solve(tickets: &[Ticket], part1: bool) -> u16 {
         uids.sort();
         uids.windows(2)
             .find(|xs| xs[0] + 2 == xs[1])
-            .map(|xs| xs[0] + 1)
-            .unwrap_or(0)
+            .map_or(0, |xs| xs[0] + 1)
     }
 }
 
@@ -43,7 +42,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p05.txt");
     let tickets = input
         .lines()
-        .map(|ticket| ticket.parse())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = solve(&tickets, true);
     let out2 = solve(&tickets, false);

@@ -26,7 +26,7 @@ impl FromStr for Instruction {
 }
 
 impl Instruction {
-    fn swap(&self) -> Option<Instruction> {
+    const fn swap(&self) -> Option<Self> {
         match self {
             Nop(arg) => Some(Jmp(*arg)),
             Jmp(arg) => Some(Nop(*arg)),
@@ -43,9 +43,9 @@ impl FromStr for Instructions {
     fn from_str(instrs: &str) -> Result<Self, Self::Err> {
         let instrs = instrs
             .lines()
-            .map(|i| i.parse::<Instruction>())
+            .map(str::parse)
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Instructions(instrs))
+        Ok(Self(instrs))
     }
 }
 
@@ -110,6 +110,7 @@ impl Program<'_> {
     }
 }
 
+#[derive(Copy, Clone)]
 enum Mode {
     DetectLoop,
     FixLoop,

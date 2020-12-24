@@ -9,8 +9,8 @@ struct Slope {
 }
 
 impl Slope {
-    fn new(right: usize, down: usize) -> Self {
-        Slope {
+    const fn new(right: usize, down: usize) -> Self {
+        Self {
             right,
             down,
             count: 0,

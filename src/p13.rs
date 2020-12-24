@@ -36,7 +36,7 @@ fn solve(busses: &[Option<u64>], start: Option<u64>) -> Result<u64, String> {
     if let Some(start) = start {
         let (bus, wait) = busses
             .iter()
-            .filter_map(|bus| bus.as_ref())
+            .filter_map(Option::as_ref)
             .map(|bus| (bus, bus * (1 + (start / bus)) - start))
             .min_by_key(|(_, wait)| *wait)
             .ok_or("No bus found")?;

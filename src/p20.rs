@@ -1,4 +1,3 @@
-use std::iter;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -18,7 +17,7 @@ enum Side {
 use Side::*;
 
 impl Side {
-    fn opp(&self) -> Self {
+    const fn opp(self) -> Self {
         match self {
             Top => Bottom,
             Bottom => Top,
@@ -43,12 +42,12 @@ impl TileTransformer {
         }
     }
 
-    fn rotate(mut self, n: u8) -> Self {
+    const fn rotate(mut self, n: u8) -> Self {
         self.rotates = (self.rotates + n) % 4;
         self
     }
 
-    fn flip(mut self) -> Self {
+    const fn flip(mut self) -> Self {
         self.flipped = !self.flipped;
         self
     }
@@ -66,7 +65,7 @@ impl TileTransformer {
             self.tile.pix = pix;
         }
         if self.flipped {
-            for row in self.tile.pix.iter_mut() {
+            for row in &mut self.tile.pix {
                 row.reverse();
             }
         }
@@ -182,11 +181,7 @@ impl TileGrid {
             .iter()
             .flat_map(|tile| tile.variants().to_vec())
             .collect::<Vec<_>>();
-        let mut init = TileGrid(
-            iter::repeat(iter::repeat(Default::default()).take(size).collect())
-                .take(size)
-                .collect(),
-        );
+        let mut init = Self(vec![vec![Tile::default(); size]; size]);
         assert!(Self::fill_grid(&mut init, &tiles, 0, 0));
         init
     }
@@ -238,13 +233,13 @@ struct Image(Vec<Vec<Pixel>>);
 impl Image {
     fn new(grid: &TileGrid) -> Self {
         let mut tiles = grid.0.iter().map(|row| {
-            let mut tiles = row.iter().map(|tile| tile.strip_borders());
+            let mut tiles = row.iter().map(Tile::strip_borders);
             let first = tiles.next().unwrap();
             tiles.fold(first, |tiles, tile| tiles.join(&tile, Right))
         });
         let first = tiles.next().unwrap();
         let tiles = tiles.fold(first, |tiles, tile| tiles.join(&tile, Bottom));
-        Image(tiles.pix)
+        Self(tiles.pix)
     }
 
     fn find(&self, pattern: &Tile) -> usize {
@@ -259,7 +254,7 @@ impl Image {
                     .pix
                     .iter()
                     .enumerate()
-                    .all(|(pr, prow)| Self::row_match(&prow, &self.0[r + pr][c..c + pwidth]))
+                    .all(|(pr, prow)| Self::row_match(prow, &self.0[r + pr][c..c + pwidth]))
                 {
                     matches += 1;
                 }
@@ -301,7 +296,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p20.txt");
     let tiles = input
         .split("\n\n")
-        .map(|tile| tile.parse::<Tile>())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let (out1, out2) = solve(&tiles);
     Ok(format!("{} {}", out1, out2))

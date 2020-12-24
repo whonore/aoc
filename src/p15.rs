@@ -8,7 +8,7 @@ struct Seq {
 
 impl Seq {
     fn new(seq: &[usize]) -> Self {
-        Seq {
+        Self {
             rounds: seq.iter().copied().zip((1..).zip(1..)).collect(),
             turn: seq.len(),
             last: *seq.last().unwrap(),
@@ -24,8 +24,7 @@ impl Iterator for Seq {
         self.last = self
             .rounds
             .get(&self.last)
-            .map(|(rnd1, rnd2)| rnd2 - rnd1)
-            .unwrap_or(0);
+            .map_or(0, |(rnd1, rnd2)| rnd2 - rnd1);
         let (_, rnd) = self
             .rounds
             .get(&self.last)
@@ -49,7 +48,7 @@ pub fn run() -> Result<String, String> {
         .map(|x| x.parse::<usize>().unwrap())
         .collect::<Vec<_>>();
     let out1 = solve(&seq, 2020);
-    let out2 = solve(&seq, 30000000);
+    let out2 = solve(&seq, 30_000_000);
     Ok(format!("{} {}", out1, out2))
 }
 

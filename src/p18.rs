@@ -47,9 +47,9 @@ impl FromStr for Lexer {
             .replace('(', " ( ")
             .replace(')', " ) ")
             .split_whitespace()
-            .map(|tok| tok.parse::<Token>())
+            .map(str::parse)
             .collect::<Result<_, _>>()?;
-        Ok(Lexer { toks, depth: 0 })
+        Ok(Self { toks, depth: 0 })
     }
 }
 
@@ -136,7 +136,7 @@ impl SamePrec {
                 }
             }
             Some(tok) => Err(format!("Expected term, found {:?}", tok)),
-            _ => Err("Expected term, found EOF".into()),
+            None => Err("Expected term, found EOF".into()),
         }
     }
 }
@@ -221,13 +221,13 @@ impl DiffPrec {
                 }
             }
             Some(tok) => Err(format!("Expected factor, found {:?}", tok)),
-            _ => Err("Expected term, found EOF".into()),
+            None => Err("Expected term, found EOF".into()),
         }
     }
 }
 
 fn solve(exps: &[Expr]) -> i64 {
-    exps.iter().map(|e| e.eval()).sum()
+    exps.iter().map(Expr::eval).sum()
 }
 
 pub fn run() -> Result<String, String> {

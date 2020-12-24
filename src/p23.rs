@@ -98,7 +98,7 @@ pub fn run() -> Result<String, String> {
         .map(|c| c.to_string().parse::<usize>().unwrap())
         .collect::<Vec<_>>();
     let out1 = solve(&cups, None, 100);
-    let out2 = solve(&cups, Some(1000000), 10000000);
+    let out2 = solve(&cups, Some(1_000_000), 10_000_000);
     Ok(format!("{} {}", out1, out2))
 }
 

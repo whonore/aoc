@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+#[derive(Copy, Clone)]
 enum Mode {
     Any,
     All,

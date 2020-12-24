@@ -69,7 +69,7 @@ impl FromStr for Coord {
     type Err = String;
 
     fn from_str(loc: &str) -> Result<Self, Self::Err> {
-        let mut coord = Coord { x: 0, y: 0, z: 0 };
+        let mut coord = Self { x: 0, y: 0, z: 0 };
         let locs = loc
             .replace("ne", "NE")
             .replace("se", "SE")
@@ -86,18 +86,18 @@ impl FromStr for Coord {
 }
 
 impl Coord {
-    fn new(x: isize, y: isize, z: isize) -> Self {
-        Coord { x, y, z }
+    const fn new(x: isize, y: isize, z: isize) -> Self {
+        Self { x, y, z }
     }
 
-    fn neighbors(&self) -> [Coord; 6] {
+    const fn neighbors(&self) -> [Self; 6] {
         [
-            Coord::new(self.x + 1, self.y, self.z - 1),
-            Coord::new(self.x + 1, self.y - 1, self.z),
-            Coord::new(self.x, self.y - 1, self.z + 1),
-            Coord::new(self.x - 1, self.y, self.z + 1),
-            Coord::new(self.x - 1, self.y + 1, self.z),
-            Coord::new(self.x, self.y + 1, self.z - 1),
+            Self::new(self.x + 1, self.y, self.z - 1),
+            Self::new(self.x + 1, self.y - 1, self.z),
+            Self::new(self.x, self.y - 1, self.z + 1),
+            Self::new(self.x - 1, self.y, self.z + 1),
+            Self::new(self.x - 1, self.y + 1, self.z),
+            Self::new(self.x, self.y + 1, self.z - 1),
         ]
     }
 }
@@ -170,7 +170,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/p24.txt");
     let locs = input
         .lines()
-        .map(|x| x.parse::<Coord>())
+        .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let (out1, out2) = solve(&locs);
     Ok(format!("{} {}", out1, out2))

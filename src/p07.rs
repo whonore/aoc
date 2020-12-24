@@ -1,6 +1,7 @@
 use std::collections::hash_map::{HashMap, Keys};
 use std::str::FromStr;
 
+#[derive(Copy, Clone)]
 enum Mode {
     CanContain,
     MustContain,
@@ -39,7 +40,7 @@ impl FromStr for Rules {
                 Ok((outer, inner))
             })
             .collect::<Result<_, Self::Err>>()?;
-        Ok(Rules { rules })
+        Ok(Self { rules })
     }
 }
 

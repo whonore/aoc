@@ -66,7 +66,7 @@ fn bit_at(n: u64, bit: u8) -> bool {
 }
 
 impl BitOr<u64> for Mask {
-    type Output = Mask;
+    type Output = Self;
 
     fn bitor(self, rhs: u64) -> Self::Output {
         let mut out = vec![];
@@ -78,7 +78,7 @@ impl BitOr<u64> for Mask {
             })
         }
         out.reverse();
-        Mask(out)
+        Self(out)
     }
 }
 
@@ -88,21 +88,21 @@ impl Mask {
         for bit in &self.0 {
             match bit {
                 Some(true) => {
-                    for v in vals.iter_mut() {
+                    for v in &mut vals {
                         *v = (*v << 1) | 1
                     }
                 }
                 Some(false) => {
-                    for v in vals.iter_mut() {
+                    for v in &mut vals {
                         *v <<= 1
                     }
                 }
                 None => {
                     let mut vals2 = vals.clone();
-                    for v in vals.iter_mut() {
+                    for v in &mut vals {
                         *v = (*v << 1) | 1
                     }
-                    for v in vals2.iter_mut() {
+                    for v in &mut vals2 {
                         *v <<= 1
                     }
                     vals.append(&mut vals2)
@@ -134,6 +134,7 @@ fn parse_seq(seq: &str) -> Result<Seq, String> {
     Ok((mask, mems))
 }
 
+#[derive(Copy, Clone)]
 enum Mode {
     V1,
     V2,

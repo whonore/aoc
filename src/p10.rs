@@ -24,7 +24,7 @@ fn arrangements(jolts: &[u32]) -> u64 {
 
 fn solve(jolts: &mut [u32]) -> (usize, u64) {
     jolts.sort();
-    (distribution(&jolts), arrangements(&jolts))
+    (distribution(jolts), arrangements(jolts))
 }
 
 pub fn run() -> Result<String, String> {

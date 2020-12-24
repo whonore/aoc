@@ -4,7 +4,7 @@ struct XMAS {
 
 impl XMAS {
     fn new(preamble: &[u64]) -> Self {
-        XMAS {
+        Self {
             data: preamble.into(),
         }
     }

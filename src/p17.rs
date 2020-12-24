@@ -59,11 +59,11 @@ impl<D: Dimension> Add for &'_ Point<D> {
 
 impl<D: Dimension> Point<D> {
     fn new2(x: i64, y: i64) -> Self {
-        Point {
+        Self {
             ps: [x, y]
                 .iter()
                 .copied()
-                .chain(vec![0i64; D::DIMS as usize - 2])
+                .chain(vec![0_i64; D::DIMS as usize - 2])
                 .collect(),
             dim: PhantomData,
         }
@@ -71,13 +71,13 @@ impl<D: Dimension> Point<D> {
 
     fn new(ps: &[i64]) -> Self {
         assert!(ps.len() == D::DIMS as usize);
-        Point {
+        Self {
             ps: ps.to_vec(),
             dim: PhantomData,
         }
     }
 
-    fn neighbors(&self) -> Vec<Point<D>> {
+    fn neighbors(&self) -> Vec<Self> {
         let mut offs: Vec<Vec<i64>> = vec![vec![-1], vec![0], vec![1]];
         for _ in 1..D::DIMS {
             offs = offs
@@ -87,7 +87,7 @@ impl<D: Dimension> Point<D> {
         }
         offs.iter()
             .filter(|ps| ps.iter().any(|p| *p != 0))
-            .map(|ps| self + &Point::new(ps))
+            .map(|ps| self + &Self::new(ps))
             .collect()
     }
 }
@@ -129,7 +129,7 @@ impl<D: Dimension> Cube<D> {
             .count()
     }
 
-    fn boot(self) -> Cube<D> {
+    fn boot(self) -> Self {
         CubeCycle(self).nth(5).unwrap()
     }
 }
@@ -149,7 +149,7 @@ impl<D: Dimension> Iterator for CubeCycle<D> {
             .0
             .points
             .iter()
-            .flat_map(|p| p.neighbors())
+            .flat_map(Point::neighbors)
             .filter(|p| !self.0.points.contains(p));
         let add = inactive.filter(|p| self.0.active_around(p) == 3);
         self.0.points = keep.cloned().chain(add).collect();

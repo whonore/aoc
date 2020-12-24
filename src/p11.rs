@@ -9,7 +9,7 @@ enum Seat {
 use Seat::*;
 
 impl Seat {
-    fn flip(&self) -> Self {
+    const fn flip(self) -> Self {
         match self {
             Floor => Floor,
             Empty => Occupied,
@@ -114,12 +114,12 @@ impl FromStr for Grid {
                     .collect()
             })
             .collect::<Result<_, _>>()?;
-        Ok(Grid(grid))
+        Ok(Self(grid))
     }
 }
 
 impl Grid {
-    fn dir_iter(&self, dir: Dir, row: usize, col: usize) -> DirIter<Seat> {
+    const fn dir_iter(&self, dir: Dir, row: usize, col: usize) -> DirIter<Seat> {
         DirIter {
             grid: &self.0,
             dir,
