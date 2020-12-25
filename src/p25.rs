@@ -1,14 +1,33 @@
-fn solve(_xs: &[usize]) -> usize {
-    0
+// sub ^ loop_sz mod 20201227
+fn trans(sub: u64, loop_sz: u64) -> u64 {
+    (0..loop_sz).fold(1, |acc, _| acc * sub % 20201227)
+}
+
+// 7 ^ x mod 20201227 = pub_key
+const fn find_loop(pub_key: u64) -> u64 {
+    let mut loop_sz = 0;
+    let mut acc = 1;
+    while acc != pub_key {
+        acc = acc * 7 % 20201227;
+        loop_sz += 1;
+    }
+    loop_sz
+}
+
+fn solve(card_pub: u64, door_pub: u64) -> u64 {
+    let card_loop = find_loop(card_pub);
+    let door_loop = find_loop(door_pub);
+    assert_eq!(trans(card_pub, door_loop), trans(door_pub, card_loop));
+    trans(card_pub, door_loop)
 }
 
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/p25.txt");
-    let seq = input
+    let pubs = input
         .lines()
-        .map(|x| x.parse::<usize>().unwrap())
+        .map(|x| x.parse::<u64>().unwrap())
         .collect::<Vec<_>>();
-    let out1 = solve(&seq);
+    let out1 = solve(pubs[0], pubs[1]);
     let out2 = "";
     Ok(format!("{} {}", out1, out2))
 }
@@ -18,7 +37,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_find_loop() {
+        assert_eq!(find_loop(5764801), 8);
+        assert_eq!(trans(7, 8), 5764801);
+        assert_eq!(find_loop(17807724), 11);
+        assert_eq!(trans(7, 11), 17807724);
+    }
+
+    #[test]
     fn test01() {
-        assert_eq!(solve(&[]), 0);
+        assert_eq!(solve(5764801, 17807724), 14897079);
     }
 }
