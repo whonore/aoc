@@ -26,8 +26,9 @@ mod d22;
 mod d23;
 mod d24;
 mod d25;
+mod intcode;
 
-pub const YEAR: usize = 20;
+pub const YEAR: usize = 19;
 
 lazy_static! {
     pub static ref DAYS: [Box<Run>; 25] = days!(

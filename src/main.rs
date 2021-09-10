@@ -7,14 +7,15 @@ macro_rules! days {
 }
 
 macro_rules! match_year {
-    ($year:expr, $day:expr, $(($y:literal, $ym:ident)),*) => {
+    ($year:expr, $day:expr, $($y:ident),*) => {
         match $year {
-            $($y if 1 <= $day && $day <= $ym::DAYS.len() => $ym::DAYS[$day - 1]())*,
+            $($y::YEAR if 1 <= $day && $day <= $y::DAYS.len() => $y::DAYS[$day - 1](),)*
             _ => Err("Year or day out of range".into()),
         }
     }
 }
 
+mod y19;
 mod y20;
 
 type Run = dyn Fn() -> Result<String, String> + Sync;
@@ -27,6 +28,6 @@ fn main() -> Result<(), String> {
     let year = args[1].parse::<usize>().map_err(|_| "Invalid year")?;
     let day = args[2].parse::<usize>().map_err(|_| "Invalid day")?;
 
-    println!("{}", match_year!(year, day, (20, y20))?);
+    println!("{}", match_year!(year, day, y19, y20)?);
     Ok(())
 }
