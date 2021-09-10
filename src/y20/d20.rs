@@ -129,7 +129,7 @@ impl Tile {
     fn border(&self, side: Side) -> Vec<Pixel> {
         match side {
             Top => self.pix[0].clone(),
-            Bottom => self.pix.last().unwrap().to_vec(),
+            Bottom => self.pix.last().unwrap().clone(),
             Left => self.pix.iter().map(|row| row[0]).collect::<Vec<_>>(),
             Right => self
                 .pix
@@ -175,6 +175,11 @@ impl TileGrid {
         self.0.len()
     }
 
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_sign_loss,
+        clippy::cast_possible_truncation
+    )]
     fn new(tiles: &[Tile]) -> Self {
         let size = (tiles.len() as f64).sqrt() as usize;
         let tiles = tiles
@@ -459,6 +464,6 @@ mod tests {
         .iter()
         .map(|tile| tile.parse::<Tile>().unwrap())
         .collect::<Vec<_>>();
-        assert_eq!(solve(&tiles), (20899048083289, 273));
+        assert_eq!(solve(&tiles), (20_899_048_083_289, 273));
     }
 }

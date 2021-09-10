@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 type Point = (i64, i64);
 
+#[allow(clippy::cast_sign_loss)]
 const fn dist(p: Point) -> u64 {
     (p.0.abs() + p.1.abs()) as u64
 }
@@ -17,6 +18,7 @@ enum Dir {
 use Dir::*;
 
 impl Dir {
+    #[allow(clippy::cast_possible_wrap)]
     const fn go(&self, loc: Point, amt: u64) -> Point {
         match self {
             Up => (loc.0, loc.1 + amt as i64),
@@ -55,7 +57,7 @@ impl FromStr for Wire {
     }
 }
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 struct Segment(Point, Point);
 
 impl Iterator for Segment {

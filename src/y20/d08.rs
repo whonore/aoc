@@ -16,10 +16,10 @@ impl FromStr for Instruction {
         let arg = inst[1]
             .parse::<i32>()
             .map_err(|_| format!("Invalid argument {}", inst[1]))?;
-        match inst[0] {
-            "nop" => Ok(Nop(arg)),
-            "acc" => Ok(Acc(arg)),
-            "jmp" => Ok(Jmp(arg)),
+        match inst.get(0) {
+            Some(&"nop") => Ok(Nop(arg)),
+            Some(&"acc") => Ok(Acc(arg)),
+            Some(&"jmp") => Ok(Jmp(arg)),
             _ => Err(format!("Invalid instruction {}", inst[0])),
         }
     }
@@ -30,7 +30,7 @@ impl Instruction {
         match self {
             Nop(arg) => Some(Jmp(*arg)),
             Jmp(arg) => Some(Nop(*arg)),
-            _ => None,
+            Acc(_) => None,
         }
     }
 }
@@ -50,7 +50,7 @@ impl FromStr for Instructions {
 }
 
 impl Instructions {
-    fn prog(&self) -> Program {
+    fn prog(&self) -> Program<'_> {
         Program {
             instrs: &self.0,
             acc: 0,
@@ -59,12 +59,10 @@ impl Instructions {
     }
 
     fn swap(&mut self, idx: usize) -> bool {
-        if let Some(inst) = self.0[idx].swap() {
+        self.0[idx].swap().map_or(false, |inst| {
             self.0[idx] = inst;
             true
-        } else {
-            false
-        }
+        })
     }
 }
 
@@ -81,6 +79,11 @@ enum Output {
 use Output::*;
 
 impl Program<'_> {
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_possible_wrap,
+        clippy::cast_sign_loss
+    )]
     fn step(&mut self) {
         match self.instrs[self.iptr] {
             Nop(_) => {

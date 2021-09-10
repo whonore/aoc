@@ -1,8 +1,8 @@
-struct XMAS {
+struct Xmas {
     data: Vec<u64>,
 }
 
-impl XMAS {
+impl Xmas {
     fn new(preamble: &[u64]) -> Self {
         Self {
             data: preamble.into(),
@@ -13,7 +13,7 @@ impl XMAS {
         let ok = self
             .data
             .iter()
-            .filter_map(|y| if *y <= x { Some(x - y) } else { None })
+            .filter_map(|y| (*y <= x).then(|| x - y))
             .any(|y| self.data.contains(&y));
         self.data.remove(0);
         self.data.push(x);
@@ -27,7 +27,7 @@ impl XMAS {
 
 fn solve(data: &[u64], width: usize) -> Result<(u64, u64), String> {
     let (preamble, data) = data.split_at(width);
-    let mut xmas = XMAS::new(preamble);
+    let mut xmas = Xmas::new(preamble);
     let invalid = xmas
         .find_invalid(data)
         .ok_or_else(|| "No invalid data found".to_string())?;

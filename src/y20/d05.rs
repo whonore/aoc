@@ -31,7 +31,7 @@ fn solve(tickets: &[Ticket], part1: bool) -> u16 {
         uids.max().unwrap_or(0)
     } else {
         let mut uids = uids.collect::<Vec<_>>();
-        uids.sort();
+        uids.sort_unstable();
         uids.windows(2)
             .find(|xs| xs[0] + 2 == xs[1])
             .map_or(0, |xs| xs[0] + 1)

@@ -41,10 +41,10 @@ impl FromStr for Point {
             .trim_matches(&['<', '>'][..])
             .split(',')
             .map(|comp| {
-                comp.split('=')
-                    .nth(1)
-                    .map(|x| x.parse::<i64>().map_err(|_| format!("Bad int {}", x)))
-                    .unwrap_or_else(|| Err(format!("Bad field {}", comp)))
+                comp.split('=').nth(1).map_or_else(
+                    || Err(format!("Bad field {}", comp)),
+                    |x| x.parse::<i64>().map_err(|_| format!("Bad int {}", x)),
+                )
             })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self {
@@ -96,7 +96,7 @@ impl Sum for Point {
     where
         I: Iterator<Item = Self>,
     {
-        iter.fold(Point::default(), |acc, pt| acc + pt)
+        iter.fold(Self::default(), |acc, pt| acc + pt)
     }
 }
 
@@ -109,7 +109,8 @@ impl Point {
         }
     }
 
-    fn abs_sum(&self) -> u64 {
+    #[allow(clippy::cast_sign_loss)]
+    const fn abs_sum(&self) -> u64 {
         (self.x.abs() + self.y.abs() + self.z.abs()) as u64
     }
 }
@@ -128,7 +129,7 @@ impl Body {
         }
     }
 
-    fn cmp_pos(&self, other: &Body) -> Point {
+    fn cmp_pos(&self, other: &Self) -> Point {
         self.pos.cmp(&other.pos)
     }
 
@@ -136,15 +137,15 @@ impl Body {
         self.pos += self.vel;
     }
 
-    fn potential(&self) -> u64 {
+    const fn potential(&self) -> u64 {
         self.pos.abs_sum()
     }
 
-    fn kinetic(&self) -> u64 {
+    const fn kinetic(&self) -> u64 {
         self.vel.abs_sum()
     }
 
-    fn energy(&self) -> u64 {
+    const fn energy(&self) -> u64 {
         self.potential() * self.kinetic()
     }
 }
@@ -182,7 +183,7 @@ fn part1(mut moons: Vec<Body>, steps: u64) -> u64 {
     for _ in 0..steps {
         step(&mut moons);
     }
-    moons.iter().map(|moon| moon.energy()).sum()
+    moons.iter().map(Body::energy).sum()
 }
 
 fn part2(mut moons: Vec<Body>) -> u64 {

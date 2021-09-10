@@ -91,10 +91,12 @@ impl Pos {
         }
     }
 
+    #[allow(clippy::cast_sign_loss)]
     const fn abs(&self) -> u32 {
         (self.x.abs() + self.y.abs()) as u32
     }
 
+    #[allow(clippy::cast_possible_wrap)]
     fn go(&mut self, act: Action) {
         match self.mode {
             Absolute => match act {

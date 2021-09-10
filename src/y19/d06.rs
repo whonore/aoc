@@ -61,13 +61,11 @@ impl Iterator for Parents<'_> {
     type Item = (String, u64);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.orbits.0.contains_key(self.obj) {
+        self.orbits.0.contains_key(self.obj).then(|| {
             self.obj = &self.orbits.0[self.obj];
             self.dist += 1;
-            Some((self.obj.into(), self.dist))
-        } else {
-            None
-        }
+            (self.obj.into(), self.dist)
+        })
     }
 }
 

@@ -127,6 +127,7 @@ fn part1(prog: &Intcode) -> Result<usize, String> {
     Ok(robot.visited.len())
 }
 
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn part2(prog: &Intcode) -> Result<String, String> {
     let mut robot = Robot::default();
     robot.visited.insert((0, 0), White);

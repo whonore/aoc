@@ -1,6 +1,6 @@
 // sub ^ loop_sz mod 20201227
 fn trans(sub: u64, loop_sz: u64) -> u64 {
-    (0..loop_sz).fold(1, |acc, _| acc * sub % 20201227)
+    (0..loop_sz).fold(1, |acc, _| acc * sub % 2020_1227)
 }
 
 // 7 ^ x mod 20201227 = pub_key
@@ -8,7 +8,7 @@ const fn find_loop(pub_key: u64) -> u64 {
     let mut loop_sz = 0;
     let mut acc = 1;
     while acc != pub_key {
-        acc = acc * 7 % 20201227;
+        acc = acc * 7 % 2020_1227;
         loop_sz += 1;
     }
     loop_sz
@@ -38,14 +38,14 @@ mod tests {
 
     #[test]
     fn test_find_loop() {
-        assert_eq!(find_loop(5764801), 8);
-        assert_eq!(trans(7, 8), 5764801);
-        assert_eq!(find_loop(17807724), 11);
-        assert_eq!(trans(7, 11), 17807724);
+        assert_eq!(find_loop(5_764_801), 8);
+        assert_eq!(trans(7, 8), 5_764_801);
+        assert_eq!(find_loop(17_807_724), 11);
+        assert_eq!(trans(7, 11), 17_807_724);
     }
 
     #[test]
     fn test01() {
-        assert_eq!(solve(5764801, 17807724), 14897079);
+        assert_eq!(solve(5_764_801, 17_807_724), 14_897_079);
     }
 }

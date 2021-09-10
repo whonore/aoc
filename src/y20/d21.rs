@@ -60,10 +60,10 @@ impl Foods {
         );
         let mut mapping = HashMap::<&str, HashSet<&str>>::new();
         for (ings, algs) in foods {
-            let ings: HashSet<&str> = ings.iter().cloned().collect();
+            let ings: HashSet<&str> = ings.iter().copied().collect();
             for alg in algs {
                 let ings_old = mapping.entry(alg).or_insert_with(|| ings.clone());
-                *ings_old = ings_old.intersection(&ings).cloned().collect();
+                *ings_old = ings_old.intersection(&ings).copied().collect();
             }
         }
 
@@ -73,13 +73,9 @@ impl Foods {
                 .values()
                 .filter_map(|ings| {
                     let ing = extract_singleton(ings)?;
-                    if !all_singles.contains(ing) {
-                        Some(ing)
-                    } else {
-                        None
-                    }
+                    (!all_singles.contains(ing)).then(|| ing)
                 })
-                .cloned()
+                .copied()
                 .collect::<HashSet<_>>();
             if singles.is_empty() {
                 break;
@@ -87,10 +83,10 @@ impl Foods {
 
             for algs in mapping.values_mut() {
                 if 1 < algs.len() {
-                    *algs = algs.difference(&singles).cloned().collect();
+                    *algs = algs.difference(&singles).copied().collect();
                 }
             }
-            all_singles = all_singles.union(&singles).cloned().collect();
+            all_singles = all_singles.union(&singles).copied().collect();
         }
         let mapping = mapping
             .iter()
@@ -114,11 +110,11 @@ fn solve(foods: &Foods) -> (usize, String) {
         .ingredients
         .iter()
         .filter_map(|(ing, cnt)| {
-            if foods.mapping.values().all(|ings| !ings.contains(ing)) {
-                Some(cnt)
-            } else {
-                None
-            }
+            foods
+                .mapping
+                .values()
+                .all(|ings| !ings.contains(ing))
+                .then(|| cnt)
         })
         .sum();
     let mut bad = foods.mapping.iter().collect::<Vec<_>>();

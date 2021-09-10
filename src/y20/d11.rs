@@ -119,7 +119,7 @@ impl FromStr for Grid {
 }
 
 impl Grid {
-    const fn dir_iter(&self, dir: Dir, row: usize, col: usize) -> DirIter<Seat> {
+    const fn dir_iter(&self, dir: Dir, row: usize, col: usize) -> DirIter<'_, Seat> {
         DirIter {
             grid: &self.0,
             dir,

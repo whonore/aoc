@@ -123,7 +123,7 @@ mod tests {
                         n1: 1,
                         n2: 3
                     },
-                    "abcde".into()
+                    "abcde"
                 ),
                 (
                     Policy {
@@ -132,7 +132,7 @@ mod tests {
                         n1: 1,
                         n2: 3
                     },
-                    "cdefg".into()
+                    "cdefg"
                 ),
                 (
                     Policy {
@@ -141,7 +141,7 @@ mod tests {
                         n1: 2,
                         n2: 9
                     },
-                    "ccccccccc".into()
+                    "ccccccccc"
                 )
             ]),
             2
@@ -159,7 +159,7 @@ mod tests {
                         n1: 1,
                         n2: 3
                     },
-                    "abcde".into()
+                    "abcde"
                 ),
                 (
                     Policy {
@@ -168,7 +168,7 @@ mod tests {
                         n1: 1,
                         n2: 3
                     },
-                    "cdefg".into()
+                    "cdefg"
                 ),
                 (
                     Policy {
@@ -177,7 +177,7 @@ mod tests {
                         n1: 2,
                         n2: 9
                     },
-                    "ccccccccc".into()
+                    "ccccccccc"
                 )
             ]),
             1

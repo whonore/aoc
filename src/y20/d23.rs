@@ -109,13 +109,13 @@ mod tests {
     #[test]
     fn test01() {
         let cups = [3, 8, 9, 1, 2, 5, 4, 6, 7];
-        assert_eq!(solve(&cups, None, 10), 92658374);
-        assert_eq!(solve(&cups, None, 100), 67384529);
+        assert_eq!(solve(&cups, None, 10), 92_658_374);
+        assert_eq!(solve(&cups, None, 100), 67_384_529);
     }
 
     #[test]
     fn test02() {
         let cups = [3, 8, 9, 1, 2, 5, 4, 6, 7];
-        assert_eq!(solve(&cups, Some(1000000), 10000000), 149245887792);
+        assert_eq!(solve(&cups, Some(1_000_000), 10_000_000), 149_245_887_792);
     }
 }

@@ -1,9 +1,9 @@
 fn part1() -> u64 {
-    0
+    todo!()
 }
 
 fn part2() -> u64 {
-    0
+    todo!()
 }
 
 pub fn run() -> Result<String, String> {
@@ -15,10 +15,8 @@ pub fn run() -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
-    #[test]
-    fn test01() {
-        assert_eq!(part1(), 0);
-    }
+    // #[test]
+    // fn test01() {}
 }

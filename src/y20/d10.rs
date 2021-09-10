@@ -4,7 +4,7 @@ fn distribution(jolts: &[u32]) -> usize {
     let min = jolts[0];
     let diffs = jolts.windows(2).map(|js| js[1] - js[0]);
     let (ones, rest): (Vec<_>, _) = diffs.partition(|d| *d == 1);
-    (if min == 1 { 1 } else { 0 } + ones.iter().count())
+    (if min == 1 { 1 } else { 0 } + ones.len())
         * (if min == 3 { 1 } else { 0 } + 1 + rest.iter().filter(|d| **d == 3).count())
 }
 
@@ -23,7 +23,7 @@ fn arrangements(jolts: &[u32]) -> u64 {
 }
 
 fn solve(jolts: &mut [u32]) -> (usize, u64) {
-    jolts.sort();
+    jolts.sort_unstable();
     (distribution(jolts), arrangements(jolts))
 }
 

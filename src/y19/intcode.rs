@@ -73,7 +73,7 @@ use Opcode::*;
 impl Opcode {
     fn new(mem: &Memory) -> Result<Self, String> {
         match mem.instr() % 100 {
-            op @ 1 | op @ 2 => Ok(Arith(
+            op @ (1 | 2) => Ok(Arith(
                 if op == 1 { Add } else { Mul },
                 mem.in_param(1),
                 mem.in_param(2),
@@ -81,8 +81,9 @@ impl Opcode {
             )),
             3 => Ok(Input(mem.out_param(1))),
             4 => Ok(Output(mem.in_param(1))),
-            op @ 5 | op @ 6 => Ok(Jump(op == 5, mem.in_param(1), mem.in_param(2) as u64)),
-            op @ 7 | op @ 8 => Ok(Compare(
+            #[allow(clippy::cast_sign_loss)]
+            op @ (5 | 6) => Ok(Jump(op == 5, mem.in_param(1), mem.in_param(2) as u64)),
+            op @ (7 | 8) => Ok(Compare(
                 if op == 7 { Lt } else { Eq },
                 mem.in_param(1),
                 mem.in_param(2),
@@ -120,6 +121,7 @@ impl Memory {
         self[self.ptr]
     }
 
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     fn in_param(&self, param: u64) -> i64 {
         match ParamMode::new(self.instr(), param as u32) {
             Immediate => self[self.ptr + param],
@@ -128,6 +130,7 @@ impl Memory {
         }
     }
 
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     fn out_param(&self, param: u64) -> u64 {
         match ParamMode::new(self.instr(), param as u32) {
             Immediate => unreachable!(),
@@ -165,7 +168,7 @@ pub struct Intcode {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct IntcodeExec<I, O> {
+pub struct Runtime<I, O> {
     mem: Memory,
     stdin: I,
     stdout: O,
@@ -192,7 +195,7 @@ impl From<Vec<i64>> for Intcode {
     }
 }
 
-impl<I, O> Index<u64> for IntcodeExec<I, O> {
+impl<I, O> Index<u64> for Runtime<I, O> {
     type Output = i64;
 
     fn index(&self, idx: u64) -> &Self::Output {
@@ -201,8 +204,8 @@ impl<I, O> Index<u64> for IntcodeExec<I, O> {
 }
 
 impl Intcode {
-    pub fn exec(&self) -> IntcodeExec<io::Empty, io::Sink> {
-        IntcodeExec {
+    pub fn exec(&self) -> Runtime<io::Empty, io::Sink> {
+        Runtime {
             mem: self.code.clone().into(),
             stdin: io::empty(),
             stdout: io::sink(),
@@ -210,30 +213,30 @@ impl Intcode {
     }
 }
 
-impl<I: io::Read, O: io::Write> IntcodeExec<I, O> {
-    pub fn read_from<I2: io::Read>(self, stdin: I2) -> IntcodeExec<I2, O> {
-        IntcodeExec {
+impl<I: io::Read, O: io::Write> Runtime<I, O> {
+    pub fn read_from<I2: io::Read>(self, stdin: I2) -> Runtime<I2, O> {
+        Runtime {
             mem: self.mem,
             stdin,
             stdout: self.stdout,
         }
     }
 
-    pub fn write_to<O2: io::Write>(self, stdout: O2) -> IntcodeExec<I, O2> {
-        IntcodeExec {
+    pub fn write_to<O2: io::Write>(self, stdout: O2) -> Runtime<I, O2> {
+        Runtime {
             mem: self.mem,
             stdin: self.stdin,
             stdout,
         }
     }
 
-    pub fn read_vec(self, stdin: &[i64]) -> IntcodeExec<io::Cursor<Vec<u8>>, O> {
+    pub fn read_vec(self, stdin: &[i64]) -> Runtime<io::Cursor<Vec<u8>>, O> {
         self.read_from(io::Cursor::new(ints_to_bytes(stdin)))
     }
 
     pub fn run(&mut self) -> Result<Vec<i64>, String> {
         self.collect::<Result<Vec<_>, _>>()
-            .map(|outs| outs.iter().copied().filter_map(|out| out).collect())
+            .map(|outs| outs.iter().copied().flatten().collect())
     }
 
     pub fn run_with(&mut self, vals: &[(u64, i64)]) -> Result<Vec<i64>, String> {
@@ -249,7 +252,7 @@ impl<I: io::Read, O: io::Write> IntcodeExec<I, O> {
     }
 }
 
-impl<I: io::Read + io::Write + io::Seek, O: io::Write> IntcodeExec<I, O> {
+impl<I: io::Read + io::Write + io::Seek, O: io::Write> Runtime<I, O> {
     pub fn read_next(&mut self, stdin: &[i64]) {
         let pos = self.stdin.seek(io::SeekFrom::Current(0)).unwrap();
         self.stdin.seek(io::SeekFrom::End(0)).unwrap();
@@ -258,7 +261,7 @@ impl<I: io::Read + io::Write + io::Seek, O: io::Write> IntcodeExec<I, O> {
     }
 }
 
-impl<I: io::Read, O: io::Write> Iterator for IntcodeExec<I, O> {
+impl<I: io::Read, O: io::Write> Iterator for Runtime<I, O> {
     type Item = Result<Option<i64>, String>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -424,13 +427,13 @@ mod tests {
 
     #[test]
     fn test_big_number() {
-        let mut p = Intcode::from(vec![1102, 34915192, 34915192, 7, 4, 7, 99, 0])
+        let mut p = Intcode::from(vec![1102, 34_915_192, 34_915_192, 7, 4, 7, 99, 0])
             .exec()
             .write_to(vec![]);
-        assert_eq!(p.run(), Ok(vec![1219070632396864]));
-        let mut p = Intcode::from(vec![104, 1125899906842624, 99])
+        assert_eq!(p.run(), Ok(vec![1_219_070_632_396_864]));
+        let mut p = Intcode::from(vec![104, 1_125_899_906_842_624, 99])
             .exec()
             .write_to(vec![]);
-        assert_eq!(p.run(), Ok(vec![1125899906842624]));
+        assert_eq!(p.run(), Ok(vec![1_125_899_906_842_624]));
     }
 }

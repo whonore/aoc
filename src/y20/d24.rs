@@ -33,7 +33,7 @@ struct Coord {
     z: isize,
 }
 
-#[allow(clippy::suspicious_op_assign_impl)]
+#[allow(clippy::suspicious_op_assign_impl, clippy::cast_possible_wrap)]
 impl AddAssign<Location> for Coord {
     fn add_assign(&mut self, loc: Location) {
         match loc {
@@ -110,7 +110,7 @@ impl Tiles {
         Self(
             counter(coords.iter())
                 .iter()
-                .filter_map(|(coord, nflip)| if *nflip % 2 == 1 { Some(**coord) } else { None })
+                .filter_map(|(coord, nflip)| (*nflip % 2 == 1).then(|| **coord))
                 .collect(),
         )
     }

@@ -73,16 +73,16 @@ mod tests {
 
     #[test]
     fn test_valid1() {
-        assert!(valid1(100000, 999999, 111111));
-        assert!(!valid1(100000, 999999, 223450));
-        assert!(!valid1(100000, 999999, 123789));
+        assert!(valid1(100_000, 999_999, 111_111));
+        assert!(!valid1(100_000, 999_999, 223_450));
+        assert!(!valid1(100_000, 999_999, 123_789));
     }
 
     #[test]
     fn test_valid2() {
-        assert!(valid2(100000, 999999, 112233));
-        assert!(!valid2(100000, 999999, 123444));
-        assert!(valid2(100000, 999999, 111122));
+        assert!(valid2(100_000, 999_999, 112_233));
+        assert!(!valid2(100_000, 999_999, 123_444));
+        assert!(valid2(100_000, 999_999, 111_122));
     }
 
     #[test]

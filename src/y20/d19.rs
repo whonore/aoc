@@ -67,11 +67,7 @@ impl fmt::Display for Rule {
 }
 
 fn non_empty<A>(xs: Vec<A>) -> Option<Vec<A>> {
-    if !xs.is_empty() {
-        Some(xs)
-    } else {
-        None
-    }
+    (!xs.is_empty()).then(|| xs)
 }
 
 #[derive(Debug)]

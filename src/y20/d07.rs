@@ -45,27 +45,23 @@ impl FromStr for Rules {
 }
 
 impl Rules {
-    fn bags(&self) -> Keys<String, Option<Vec<(String, usize)>>> {
+    fn bags(&self) -> Keys<'_, String, Option<Vec<(String, usize)>>> {
         self.rules.keys()
     }
 
     fn can_hold(&self, outer: &str, inner: &str) -> bool {
-        if let Some(bags) = &self.rules[outer] {
+        self.rules[outer].as_ref().map_or(false, |bags| {
             bags.iter()
                 .any(|(bag, _)| bag == inner || self.can_hold(bag, inner))
-        } else {
-            false
-        }
+        })
     }
 
     fn must_hold(&self, bag: &str) -> usize {
-        if let Some(bags) = &self.rules[bag] {
+        self.rules[bag].as_ref().map_or(0, |bags| {
             bags.iter()
                 .map(|(bag, n)| n + n * self.must_hold(bag))
                 .sum()
-        } else {
-            0
-        }
+        })
     }
 }
 
@@ -91,24 +87,23 @@ pub fn run() -> Result<String, String> {
 mod tests {
     use super::*;
 
-    const RULES1: &'static str =
-        "light red bags contain 1 bright white bag, 2 muted yellow bags.\n\
-         dark orange bags contain 3 bright white bags, 4 muted yellow bags.\n\
-         bright white bags contain 1 shiny gold bag.\n\
-         muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.\n\
-         shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.\n\
-         dark olive bags contain 3 faded blue bags, 4 dotted black bags.\n\
-         vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.\n\
-         faded blue bags contain no other bags.\n\
-         dotted black bags contain no other bags.";
+    const RULES1: &str = "light red bags contain 1 bright white bag, 2 muted yellow bags.\n\
+                          dark orange bags contain 3 bright white bags, 4 muted yellow bags.\n\
+                          bright white bags contain 1 shiny gold bag.\n\
+                          muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.\n\
+                          shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.\n\
+                          dark olive bags contain 3 faded blue bags, 4 dotted black bags.\n\
+                          vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.\n\
+                          faded blue bags contain no other bags.\n\
+                          dotted black bags contain no other bags.";
 
-    const RULES2: &'static str = "shiny gold bags contain 2 dark red bags.\n\
-                                  dark red bags contain 2 dark orange bags.\n\
-                                  dark orange bags contain 2 dark yellow bags.\n\
-                                  dark yellow bags contain 2 dark green bags.\n\
-                                  dark green bags contain 2 dark blue bags.\n\
-                                  dark blue bags contain 2 dark violet bags.\n\
-                                  dark violet bags contain no other bags.";
+    const RULES2: &str = "shiny gold bags contain 2 dark red bags.\n\
+                          dark red bags contain 2 dark orange bags.\n\
+                          dark orange bags contain 2 dark yellow bags.\n\
+                          dark yellow bags contain 2 dark green bags.\n\
+                          dark green bags contain 2 dark blue bags.\n\
+                          dark blue bags contain 2 dark violet bags.\n\
+                          dark violet bags contain no other bags.";
 
     #[test]
     fn test_parse() {

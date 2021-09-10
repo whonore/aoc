@@ -41,13 +41,13 @@ mod tests {
         assert_eq!(calc_fuel(12), 2);
         assert_eq!(calc_fuel(14), 2);
         assert_eq!(calc_fuel(1969), 654);
-        assert_eq!(calc_fuel(100756), 33583);
+        assert_eq!(calc_fuel(100_756), 33583);
     }
 
     #[test]
     fn test02() {
         assert_eq!(calc_fuel_all(14), 2);
         assert_eq!(calc_fuel_all(1969), 966);
-        assert_eq!(calc_fuel_all(100756), 50346);
+        assert_eq!(calc_fuel_all(100_756), 50346);
     }
 }

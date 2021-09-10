@@ -4,6 +4,7 @@ use std::str::FromStr;
 use lazy_static::lazy_static;
 use regex::Regex;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(PartialEq, Eq, Debug, Hash)]
 enum Field {
     BYR,

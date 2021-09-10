@@ -1,7 +1,7 @@
 use std::ops::Index;
 use std::str::FromStr;
 
-#[derive(PartialEq, Eq, Debug, Copy, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 struct Slope {
     right: usize,
     down: usize,
@@ -91,7 +91,7 @@ fn count_trees(grid: &Grid, slope: Slope) -> usize {
 fn solve(grid: &Grid, slopes: &[Slope]) -> usize {
     slopes
         .iter()
-        .map(|slope| count_trees(grid, *slope))
+        .map(|slope| count_trees(grid, slope.clone()))
         .product()
 }
 

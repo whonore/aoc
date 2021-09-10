@@ -178,10 +178,10 @@ mod tests {
     fn test_neighbors() {
         let p: Point<D3> = Point::new2(0, 0);
         assert_eq!(p.ps.len(), 3);
-        assert_eq!(p.neighbors().len(), 3usize.pow(3) - 1);
+        assert_eq!(p.neighbors().len(), 3_usize.pow(3) - 1);
         let p: Point<D4> = Point::new2(0, 0);
         assert_eq!(p.ps.len(), 4);
-        assert_eq!(p.neighbors().len(), 3usize.pow(4) - 1);
+        assert_eq!(p.neighbors().len(), 3_usize.pow(4) - 1);
     }
 
     #[test]

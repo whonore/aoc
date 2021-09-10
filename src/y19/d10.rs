@@ -15,7 +15,7 @@ struct Point {
 }
 
 impl Point {
-    fn new(x: isize, y: isize) -> Self {
+    const fn new(x: isize, y: isize) -> Self {
         Self { x, y }
     }
 
@@ -29,8 +29,9 @@ impl Point {
         self.colinear(p1, p2) && (in_range(p1.x, self.x, p2.x) || in_range(p1.y, self.y, p2.y))
     }
 
+    #[allow(clippy::unused_self)]
     fn angle(self, _other: Self) -> f64 {
-        0.0
+        todo!()
     }
 }
 
@@ -62,17 +63,14 @@ struct Map(HashSet<Point>);
 impl FromStr for Map {
     type Err = String;
 
+    #[allow(clippy::cast_possible_wrap)]
     fn from_str(map: &str) -> Result<Self, Self::Err> {
         Ok(Self(
             map.lines()
                 .enumerate()
                 .flat_map(|(y, line)| {
                     line.chars().enumerate().filter_map(move |(x, c)| {
-                        if c == '#' {
-                            Some(Point::new(x as isize, y as isize))
-                        } else {
-                            None
-                        }
+                        (c == '#').then(|| Point::new(x as isize, y as isize))
                     })
                 })
                 .collect(),
@@ -101,9 +99,8 @@ impl Map {
 
             if remove.is_empty() {
                 break;
-            } else {
-                visible = visible.difference(&remove).copied().collect();
             }
+            visible = visible.difference(&remove).copied().collect();
         }
         visible
     }
@@ -120,7 +117,7 @@ struct Vaporize {
 }
 
 impl Vaporize {
-    fn new(map: Map, start: Point) -> Self {
+    const fn new(map: Map, start: Point) -> Self {
         Self {
             map,
             start,
@@ -142,12 +139,10 @@ impl Iterator for Vaporize {
             self.visible.reverse();
         }
 
-        if let Some(v) = self.visible.pop() {
+        self.visible.pop().map(|v| {
             self.map.0.remove(&v);
-            Some(v)
-        } else {
-            None
-        }
+            v
+        })
     }
 }
 

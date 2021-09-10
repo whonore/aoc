@@ -68,6 +68,7 @@ fn bit_at(n: u64, bit: u8) -> bool {
 impl BitOr<u64> for Mask {
     type Output = Self;
 
+    #[allow(clippy::cast_possible_truncation)]
     fn bitor(self, rhs: u64) -> Self::Output {
         let mut out = vec![];
         for (bit, mask) in self.0.iter().rev().enumerate() {

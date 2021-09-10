@@ -49,9 +49,8 @@ fn play(deck1: &mut Deck, deck2: &mut Deck, mode: Mode) -> Player {
         let d = (deck1.clone(), deck2.clone());
         if prev.contains(&d) {
             return Infinite;
-        } else {
-            prev.insert(d);
         }
+        prev.insert(d);
         round(deck1, deck2, mode);
     }
     if deck1.is_empty() {

@@ -1,4 +1,5 @@
 // q = gcd(x, y) = x * x0 + y * y0
+#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
 fn euclid(x: u64, y: u64) -> (u64, i64, i64) {
     let mut x = x as i64;
     let mut y = y as i64;
@@ -24,6 +25,7 @@ fn euclid(x: u64, y: u64) -> (u64, i64, i64) {
 }
 
 // a * x mod n = 1
+#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
 fn invmod(a: u64, n: u64) -> u64 {
     let (_, mut x, _) = euclid(a, n);
     while x.is_negative() {
@@ -93,17 +95,18 @@ mod tests {
         assert_eq!(solve(&busses, Some(939)), Ok(295));
     }
 
+    #[allow(clippy::shadow_unrelated)]
     #[test]
     fn test02() {
         let busses = [Some(17), None, Some(13), Some(19)];
         assert_eq!(solve(&busses, None), Ok(3417));
         let busses = [Some(67), Some(7), Some(59), Some(61)];
-        assert_eq!(solve(&busses, None), Ok(754018));
+        assert_eq!(solve(&busses, None), Ok(754_018));
         let busses = [Some(67), None, Some(7), Some(59), Some(61)];
-        assert_eq!(solve(&busses, None), Ok(779210));
+        assert_eq!(solve(&busses, None), Ok(779_210));
         let busses = [Some(67), Some(7), None, Some(59), Some(61)];
-        assert_eq!(solve(&busses, None), Ok(1261476));
+        assert_eq!(solve(&busses, None), Ok(1_261_476));
         let busses = [Some(1789), Some(37), Some(47), Some(1889)];
-        assert_eq!(solve(&busses, None), Ok(1202161486));
+        assert_eq!(solve(&busses, None), Ok(1_202_161_486));
     }
 }
