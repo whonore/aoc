@@ -167,7 +167,7 @@ fn solve(coords: &[Coord]) -> (usize, usize) {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p24.txt");
+    let input = include_str!("input/d24.txt");
     let locs = input
         .lines()
         .map(str::parse)

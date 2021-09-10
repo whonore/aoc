@@ -22,7 +22,7 @@ fn solve(card_pub: u64, door_pub: u64) -> u64 {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p25.txt");
+    let input = include_str!("input/d25.txt");
     let pubs = input
         .lines()
         .map(|x| x.parse::<u64>().unwrap())

@@ -28,7 +28,7 @@ fn solve(jolts: &mut [u32]) -> (usize, u64) {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p10.txt");
+    let input = include_str!("input/d10.txt");
     let mut jolts = input
         .lines()
         .map(|x| x.parse::<u32>().unwrap())

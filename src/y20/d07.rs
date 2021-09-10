@@ -80,7 +80,7 @@ fn solve(rules: &Rules, bag: &str, mode: Mode) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p07.txt");
+    let input = include_str!("input/d07.txt");
     let rules = input.parse::<Rules>()?;
     let out1 = solve(&rules, "shiny gold", CanContain);
     let out2 = solve(&rules, "shiny gold", MustContain);

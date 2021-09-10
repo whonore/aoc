@@ -96,7 +96,7 @@ fn solve(grid: &Grid, slopes: &[Slope]) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p03.txt");
+    let input = include_str!("input/d03.txt");
     let grid = input.parse()?;
     let out1 = solve(&grid, &[Slope::new(3, 1)]);
     let out2 = solve(

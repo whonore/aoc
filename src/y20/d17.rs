@@ -162,7 +162,7 @@ fn solve<D: Dimension>(cube: Cube<D>) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p17.txt");
+    let input = include_str!("input/d17.txt");
     let cube = input.parse::<Cube<D3>>()?;
     let out1 = solve(cube);
     let cube = input.parse::<Cube<D4>>()?;

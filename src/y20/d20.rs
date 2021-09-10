@@ -293,7 +293,7 @@ fn solve(tiles: &[Tile]) -> (u64, usize) {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p20.txt");
+    let input = include_str!("input/d20.txt");
     let tiles = input
         .split("\n\n")
         .map(str::parse)

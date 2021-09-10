@@ -60,7 +60,7 @@ fn solve(busses: &[Option<u64>], start: Option<u64>) -> Result<u64, String> {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p13.txt");
+    let input = include_str!("input/d13.txt");
     let mut lines = input.lines();
     let start = lines.next().unwrap().parse::<u64>().unwrap();
     let busses = lines

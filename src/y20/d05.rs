@@ -39,7 +39,7 @@ fn solve(tickets: &[Ticket], part1: bool) -> u16 {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p05.txt");
+    let input = include_str!("input/d05.txt");
     let tickets = input
         .lines()
         .map(str::parse)

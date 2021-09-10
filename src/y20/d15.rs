@@ -41,7 +41,7 @@ fn solve(seq: &[usize], n: usize) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p15.txt");
+    let input = include_str!("input/d15.txt");
     let seq = input
         .trim()
         .split(',')

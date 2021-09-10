@@ -24,7 +24,7 @@ fn solve(qs: &[&str], mode: Mode) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p06.txt");
+    let input = include_str!("input/d06.txt");
     let qs: Vec<_> = input.split("\n\n").collect();
     let out1 = solve(&qs, Any);
     let out2 = solve(&qs, All);

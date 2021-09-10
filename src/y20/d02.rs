@@ -60,7 +60,7 @@ fn solve(xs: &[(Policy, &str)]) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p02.txt");
+    let input = include_str!("input/d02.txt");
     let mut xs: Vec<(Policy, &str)> = input
         .lines()
         .map(|x| {

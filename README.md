@@ -1,2 +1,2 @@
-# aoc2020
-Advent of Code 2020 Rust Solutions
+# aoc
+Advent of Code 2019-2020 Rust Solutions

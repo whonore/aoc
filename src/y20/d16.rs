@@ -146,7 +146,7 @@ fn solve(fields: &Fields, mytick: &Ticket, ticks: &[Ticket], mode: Mode) -> u64 
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p16.txt");
+    let input = include_str!("input/d16.txt");
     let mut sections = input.split("\n\n");
     let fields = sections.next().unwrap().parse::<Fields>()?;
     let mytick = sections

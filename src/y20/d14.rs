@@ -165,7 +165,7 @@ fn solve(seqs: &[Seq], mode: Mode) -> u64 {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p14.txt");
+    let input = include_str!("input/d14.txt");
     let seqs = input.split("mask = ").collect::<Vec<_>>();
     let seqs = seqs[1..]
         .iter()

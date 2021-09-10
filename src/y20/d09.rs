@@ -51,7 +51,7 @@ fn solve(data: &[u64], width: usize) -> Result<(u64, u64), String> {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p09.txt");
+    let input = include_str!("input/d09.txt");
     let data = input
         .lines()
         .map(|x| x.parse::<u64>().unwrap())

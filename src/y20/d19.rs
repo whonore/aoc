@@ -127,7 +127,7 @@ fn solve(rules: &Rules, msgs: &[&str]) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p19.txt");
+    let input = include_str!("input/d19.txt");
     let blocks = input.split("\n\n").collect::<Vec<_>>();
     let mut rules = blocks[0].parse::<Rules>()?;
     let msgs = blocks[1].lines().collect::<Vec<_>>();

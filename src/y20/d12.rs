@@ -148,7 +148,7 @@ fn solve(acts: &[Action], mode: Mode) -> u32 {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p12.txt");
+    let input = include_str!("input/d12.txt");
     let acts = input
         .lines()
         .map(str::parse)

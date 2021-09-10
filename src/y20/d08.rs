@@ -143,7 +143,7 @@ fn solve(instrs: &mut Instructions, mode: Mode) -> Result<i32, String> {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p08.txt");
+    let input = include_str!("input/d08.txt");
     let mut instrs = input.parse::<Instructions>()?;
     let out1 = solve(&mut instrs, DetectLoop)?;
     let out2 = solve(&mut instrs, FixLoop)?;

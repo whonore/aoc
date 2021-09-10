@@ -100,7 +100,7 @@ fn solve(passports: &[Passport], check_value: bool) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p04.txt");
+    let input = include_str!("input/d04.txt");
     let passports = input
         .split("\n\n")
         .map(str::parse)

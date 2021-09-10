@@ -77,7 +77,7 @@ fn solve(deck1: &mut Deck, deck2: &mut Deck, mode: Mode) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p22.txt");
+    let input = include_str!("input/d22.txt");
     let mut decks = input.split("\n\n").map(|deck| {
         deck.lines()
             .skip(1)

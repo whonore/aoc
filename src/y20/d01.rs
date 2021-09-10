@@ -23,7 +23,7 @@ fn solve(n: u32, xs: &[u32]) -> Option<u32> {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p01.txt");
+    let input = include_str!("input/d01.txt");
     let xs: Vec<u32> = input.lines().map(|x| x.parse::<u32>().unwrap()).collect();
     let out1 = solve(2, &xs).ok_or("No solution found")?;
     let out2 = solve(3, &xs).ok_or("No solution found")?;

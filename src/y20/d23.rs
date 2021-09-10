@@ -91,7 +91,7 @@ fn solve(cups: &[usize], extra: Option<usize>, moves: usize) -> usize {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p23.txt");
+    let input = include_str!("input/d23.txt");
     let cups = input
         .trim()
         .chars()

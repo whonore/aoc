@@ -197,7 +197,7 @@ fn solve(grid: &mut Grid) -> (usize, usize) {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p11.txt");
+    let input = include_str!("input/d11.txt");
     let mut grid = input.parse::<Grid>()?;
     let (out1, out2) = solve(&mut grid);
     Ok(format!("{} {}", out1, out2))

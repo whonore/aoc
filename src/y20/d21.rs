@@ -134,7 +134,7 @@ fn solve(foods: &Foods) -> (usize, String) {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p21.txt");
+    let input = include_str!("input/d21.txt");
     let foods = input.parse::<Foods>()?;
     let (out1, out2) = solve(&foods);
     Ok(format!("{} {}", out1, out2))

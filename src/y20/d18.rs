@@ -231,7 +231,7 @@ fn solve(exps: &[Expr]) -> i64 {
 }
 
 pub fn run() -> Result<String, String> {
-    let input = include_str!("input/p18.txt");
+    let input = include_str!("input/d18.txt");
     let exps = input
         .lines()
         .map(|x| x.parse::<SamePrec>().map(|e| e.0))
