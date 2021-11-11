@@ -75,6 +75,7 @@ fn solve(deck1: &mut Deck, deck2: &mut Deck, mode: Mode) -> usize {
     })
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d22.txt");
     let mut decks = input.split("\n\n").map(|deck| {

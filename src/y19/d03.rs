@@ -177,7 +177,7 @@ mod tests {
         assert_eq!(
             w1.intersect(&w2),
             [(3, 3), (6, 5)].iter().copied().collect()
-        )
+        );
     }
 
     #[test]

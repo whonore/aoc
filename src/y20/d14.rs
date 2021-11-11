@@ -76,7 +76,7 @@ impl BitOr<u64> for Mask {
                 Some(true) => Some(true),
                 Some(false) => Some(bit_at(rhs, bit as u8)),
                 None => None,
-            })
+            });
         }
         out.reverse();
         Self(out)
@@ -90,23 +90,23 @@ impl Mask {
             match bit {
                 Some(true) => {
                     for v in &mut vals {
-                        *v = (*v << 1) | 1
+                        *v = (*v << 1) | 1;
                     }
                 }
                 Some(false) => {
                     for v in &mut vals {
-                        *v <<= 1
+                        *v <<= 1;
                     }
                 }
                 None => {
                     let mut vals2 = vals.clone();
                     for v in &mut vals {
-                        *v = (*v << 1) | 1
+                        *v = (*v << 1) | 1;
                     }
                     for v in &mut vals2 {
-                        *v <<= 1
+                        *v <<= 1;
                     }
-                    vals.append(&mut vals2)
+                    vals.append(&mut vals2);
                 }
             }
         }
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_expand() {
         let mask: Mask = "01XX".parse().unwrap();
-        assert_eq!(mask.expand(), vec![0b0111, 0b0101, 0b0110, 0b0100])
+        assert_eq!(mask.expand(), vec![0b0111, 0b0101, 0b0110, 0b0100]);
     }
 
     #[test]

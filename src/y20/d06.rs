@@ -23,6 +23,7 @@ fn solve(qs: &[&str], mode: Mode) -> usize {
         .sum()
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d06.txt");
     let qs: Vec<_> = input.split("\n\n").collect();
@@ -55,7 +56,7 @@ mod tests {
                 Any
             ),
             11
-        )
+        );
     }
 
     #[test]
@@ -78,6 +79,6 @@ mod tests {
                 All
             ),
             6
-        )
+        );
     }
 }

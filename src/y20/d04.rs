@@ -149,7 +149,7 @@ mod tests {
         .iter()
         .map(|p| p.parse().unwrap())
         .collect();
-        assert_eq!(solve(&passports, false), 2)
+        assert_eq!(solve(&passports, false), 2);
     }
 
     #[test]

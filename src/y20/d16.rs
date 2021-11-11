@@ -124,7 +124,7 @@ fn identify_fields(fields: &Fields, ticks: &[Ticket]) -> Vec<String> {
             if 1 < fs.len() {
                 fs.retain(|f| !done.contains(f));
                 if fs.len() == 1 {
-                    done.push(fs[0])
+                    done.push(fs[0]);
                 }
             }
         }
@@ -214,6 +214,6 @@ mod tests {
         assert_eq!(
             identify_fields(&fields, &ticks),
             vec!["row", "class", "seat"]
-        )
+        );
     }
 }

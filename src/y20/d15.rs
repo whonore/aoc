@@ -40,6 +40,7 @@ fn solve(seq: &[usize], n: usize) -> usize {
     seq.nth(n).unwrap()
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d15.txt");
     let seq = input

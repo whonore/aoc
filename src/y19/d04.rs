@@ -19,13 +19,13 @@ fn two_match(digits: &[u32]) -> bool {
     let mut found = 1;
     for d in digits {
         if Some(d) == last {
-            found += 1
+            found += 1;
         } else if found == 2 {
             break;
         } else {
-            found = 1
+            found = 1;
         }
-        last = Some(d)
+        last = Some(d);
     }
     found == 2
 }

@@ -21,6 +21,7 @@ fn solve(card_pub: u64, door_pub: u64) -> u64 {
     trans(card_pub, door_loop)
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d25.txt");
     let pubs = input

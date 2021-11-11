@@ -27,6 +27,7 @@ fn solve(jolts: &mut [u32]) -> (usize, u64) {
     (distribution(jolts), arrangements(jolts))
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d10.txt");
     let mut jolts = input

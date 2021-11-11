@@ -81,7 +81,7 @@ impl Game {
 fn solve(cups: &[usize], extra: Option<usize>, moves: usize) -> usize {
     let mut game = Game::new(cups, extra);
     for _ in 0..moves {
-        game.play()
+        game.play();
     }
     if extra.is_none() {
         game.to_int()
@@ -90,6 +90,7 @@ fn solve(cups: &[usize], extra: Option<usize>, moves: usize) -> usize {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d23.txt");
     let cups = input

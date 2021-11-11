@@ -6,6 +6,7 @@ fn part2() -> u64 {
     todo!()
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let _input = include_str!("input/d18.txt");
     let out1 = part1();

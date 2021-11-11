@@ -132,6 +132,7 @@ fn part2(layers: &Layers) -> String {
     format!("{}", layers.decode())
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d08.txt");
     let img = Layers::new(25, 6, input);

@@ -11,7 +11,6 @@
 #![warn(clippy::if_then_some_else_none)]
 #![allow(clippy::enum_glob_use)]
 #![allow(clippy::if_not_else)]
-#![allow(clippy::pub_enum_variant_names)]
 #![allow(clippy::similar_names)]
 #![allow(clippy::too_many_lines)]
 
