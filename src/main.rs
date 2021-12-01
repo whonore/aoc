@@ -33,6 +33,7 @@ macro_rules! match_year {
 
 mod y19;
 mod y20;
+mod y21;
 
 type Run = dyn Fn() -> Result<String, String> + Sync;
 
@@ -44,6 +45,6 @@ fn main() -> Result<(), String> {
     let year = args[1].parse::<usize>().map_err(|_| "Invalid year")?;
     let day = args[2].parse::<usize>().map_err(|_| "Invalid day")?;
 
-    println!("{}", match_year!(year, day, y19, y20)?);
+    println!("{}", match_year!(year, day, y19, y20, y21)?);
     Ok(())
 }
