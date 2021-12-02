@@ -2,9 +2,9 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy)]
 enum Dir {
-    Forward(u64),
-    Down(u64),
-    Up(u64),
+    Forward(i64),
+    Down(i64),
+    Up(i64),
 }
 use Dir::*;
 
@@ -28,8 +28,8 @@ impl FromStr for Dir {
 
 #[derive(Debug, Clone, Copy)]
 struct Pos {
-    horz: u64,
-    depth: u64,
+    horz: i64,
+    depth: i64,
 }
 
 impl Pos {
@@ -55,14 +55,49 @@ impl Pos {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+struct PosAim {
+    horz: i64,
+    depth: i64,
+    aim: i64,
+}
 
-fn part1(dirs: &[Dir]) -> u64 {
+impl PosAim {
+    const fn new() -> Self {
+        Self {
+            horz: 0,
+            depth: 0,
+            aim: 0,
+        }
+    }
+
+    const fn step(&self, dir: Dir) -> Self {
+        match dir {
+            Forward(x) => Self {
+                horz: self.horz + x,
+                depth: self.depth + (x * self.aim),
+                ..*self
+            },
+            Down(x) => Self {
+                aim: self.aim + x,
+                ..*self
+            },
+            Up(x) => Self {
+                aim: self.aim - x,
+                ..*self
+            },
+        }
+    }
+}
+
+fn part1(dirs: &[Dir]) -> i64 {
     let pos = dirs.iter().fold(Pos::new(), |pos, dir| pos.step(*dir));
     pos.horz * pos.depth
 }
 
-fn part2() -> u64 {
-    0
+fn part2(dirs: &[Dir]) -> i64 {
+    let pos = dirs.iter().fold(PosAim::new(), |pos, dir| pos.step(*dir));
+    pos.horz * pos.depth
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -85,5 +120,11 @@ mod tests {
     fn test01() {
         let dirs = [Forward(5), Down(5), Forward(8), Up(3), Down(8), Forward(2)];
         assert_eq!(part1(&dirs), 150);
+    }
+
+    #[test]
+    fn test02() {
+        let dirs = [Forward(5), Down(5), Forward(8), Up(3), Down(8), Forward(2)];
+        assert_eq!(part2(&dirs), 900);
     }
 }
