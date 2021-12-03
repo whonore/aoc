@@ -40,23 +40,52 @@ impl Bin {
     }
 }
 
-fn part1(bins: &[Bin]) -> u64 {
+fn most_common_bits(bins: &[Bin]) -> Bin {
     let n = bins.len() as u64;
-    let len = bins[0].0.len() as u64;
-    let mask = (1 << len) - 1;
     let cts: Bin = bins.iter().cloned().reduce(|x, y| x + y).unwrap();
-    let gamma = Bin(cts
+    Bin(cts
         .0
         .iter()
-        .map(|x| if *x > n / 2 { 1 } else { 0 })
+        .map(|x| if 2 * x >= n { 1 } else { 0 })
         .collect())
-    .to_u64();
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Criteria {
+    Most,
+    Least,
+}
+
+fn filter_criteria(mut bins: Vec<Bin>, crit: Criteria) -> Option<Bin> {
+    let len = bins[0].0.len();
+    for n in 0..len {
+        if bins.len() <= 1 {
+            break;
+        }
+        let cbit = most_common_bits(&bins).0[n];
+        bins = bins
+            .into_iter()
+            .filter(|bit| match crit {
+                Criteria::Most => bit.0[n] == cbit,
+                Criteria::Least => bit.0[n] != cbit,
+            })
+            .collect();
+    }
+    bins.get(0).cloned()
+}
+
+fn part1(bins: &[Bin]) -> u64 {
+    let len = bins[0].0.len() as u64;
+    let mask = (1 << len) - 1;
+    let gamma = most_common_bits(bins).to_u64();
     let epsilon = !gamma & mask;
     gamma * epsilon
 }
 
-fn part2() -> u64 {
-    0
+fn part2(bins: &[Bin]) -> u64 {
+    let o2 = filter_criteria(bins.to_vec(), Criteria::Most).unwrap();
+    let co2 = filter_criteria(bins.to_vec(), Criteria::Least).unwrap();
+    o2.to_u64() * co2.to_u64()
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -67,7 +96,7 @@ pub fn run() -> Result<String, String> {
         .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = part1(&bins);
-    let out2 = part2();
+    let out2 = part2(&bins);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -92,5 +121,24 @@ mod tests {
             Bin(vec![0, 1, 0, 1, 0]),
         ];
         assert_eq!(part1(&bins), 198);
+    }
+
+    #[test]
+    fn test02() {
+        let bins = [
+            Bin(vec![0, 0, 1, 0, 0]),
+            Bin(vec![1, 1, 1, 1, 0]),
+            Bin(vec![1, 0, 1, 1, 0]),
+            Bin(vec![1, 0, 1, 1, 1]),
+            Bin(vec![1, 0, 1, 0, 1]),
+            Bin(vec![0, 1, 1, 1, 1]),
+            Bin(vec![0, 0, 1, 1, 1]),
+            Bin(vec![1, 1, 1, 0, 0]),
+            Bin(vec![1, 0, 0, 0, 0]),
+            Bin(vec![1, 1, 0, 0, 1]),
+            Bin(vec![0, 0, 0, 1, 0]),
+            Bin(vec![0, 1, 0, 1, 0]),
+        ];
+        assert_eq!(part2(&bins), 230);
     }
 }
