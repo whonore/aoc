@@ -59,9 +59,9 @@ impl Board {
     }
 }
 
-fn part1(draws: &[u8], boards: &mut [Board]) -> Option<u64> {
+fn part1(draws: &[u8], mut boards: Vec<Board>) -> Option<u64> {
     for draw in draws {
-        for b in boards.iter_mut() {
+        for b in &mut boards {
             b.mark(*draw);
         }
         if let Some(b) = boards.iter().find(|b| b.won()) {
@@ -71,8 +71,19 @@ fn part1(draws: &[u8], boards: &mut [Board]) -> Option<u64> {
     None
 }
 
-fn part2() -> u64 {
-    0
+fn part2(draws: &[u8], mut boards: Vec<Board>) -> Option<u64> {
+    for draw in draws {
+        for b in &mut boards {
+            b.mark(*draw);
+        }
+        if boards.len() > 1 {
+            boards.retain(|b| !b.won());
+        }
+        if let Some(b) = boards.iter().find(|b| b.won()) {
+            return Some(b.score() * u64::from(*draw));
+        }
+    }
+    None
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -88,8 +99,8 @@ pub fn run() -> Result<String, String> {
         .split("\n\n")
         .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = part1(&draws, &mut boards.clone()).ok_or("No winning board")?;
-    let out2 = part2();
+    let out1 = part1(&draws, boards.clone()).ok_or("No winning board")?;
+    let out2 = part2(&draws, boards).ok_or("No winning board")?;
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -103,7 +114,7 @@ mod tests {
             7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21, 24, 10, 16, 13, 6, 15, 25, 12, 22, 18, 20, 8, 19,
             3, 26, 1,
         ];
-        let mut boards = [
+        let boards = [
             "22 13 17 11  0\n\
               8  2 23  4 24\n\
              21  9 14 16  7\n\
@@ -123,6 +134,35 @@ mod tests {
         .iter()
         .map(|lines| lines.parse().unwrap())
         .collect::<Vec<_>>();
-        assert_eq!(part1(&draws, &mut boards), Some(4512));
+        assert_eq!(part1(&draws, boards), Some(4512));
+    }
+
+    #[test]
+    fn test02() {
+        let draws = [
+            7, 4, 9, 5, 11, 17, 23, 2, 0, 14, 21, 24, 10, 16, 13, 6, 15, 25, 12, 22, 18, 20, 8, 19,
+            3, 26, 1,
+        ];
+        let boards = [
+            "22 13 17 11  0\n\
+              8  2 23  4 24\n\
+             21  9 14 16  7\n\
+              6 10  3 18  5\n\
+              1 12 20 15 19",
+            " 3 15  0  2 22\n\
+              9 18 13 17  5\n\
+             19  8  7 25 23\n\
+             20 11 10 24  4\n\
+             14 21 16 12  6",
+            "14 21 17 24  4\n\
+             10 16 15  9 19\n\
+             18  8 23 26 20\n\
+             22 11 13  6  5\n\
+              2  0 12  3  7",
+        ]
+        .iter()
+        .map(|lines| lines.parse().unwrap())
+        .collect::<Vec<_>>();
+        assert_eq!(part2(&draws, boards), Some(1924));
     }
 }
