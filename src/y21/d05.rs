@@ -85,40 +85,53 @@ impl Iterator for LineIter {
             None
         } else {
             let pt = self.cur;
-            match (self.cur.x.cmp(&self.end.x), self.cur.y.cmp(&self.end.y)) {
-                (Ordering::Less, Ordering::Equal) => {
-                    self.cur.x += 1;
-                }
-                (Ordering::Greater, Ordering::Equal) => {
-                    self.cur.x -= 1;
-                }
-                (Ordering::Equal, Ordering::Less) => {
-                    self.cur.y += 1;
-                }
-                (Ordering::Equal, Ordering::Greater) => {
-                    self.cur.y -= 1;
-                }
-                (Ordering::Equal, Ordering::Equal) => {
-                    self.done = true;
-                }
-                (_, _) => unreachable!(),
-            };
+            if self.cur == self.end {
+                self.done = true;
+            } else {
+                match self.cur.x.cmp(&self.end.x) {
+                    Ordering::Less => {
+                        self.cur.x += 1;
+                    }
+                    Ordering::Greater => {
+                        self.cur.x -= 1;
+                    }
+                    Ordering::Equal => {}
+                };
+                match self.cur.y.cmp(&self.end.y) {
+                    Ordering::Less => {
+                        self.cur.y += 1;
+                    }
+                    Ordering::Greater => {
+                        self.cur.y -= 1;
+                    }
+                    Ordering::Equal => {}
+                };
+            }
             Some(pt)
         }
     }
 }
 
-fn part1(lines: &[Line]) -> usize {
-    let pts = lines
-        .iter()
-        .filter(|line| line.horizontal() || line.vertical())
+fn count_overlap<'a>(lines: impl IntoIterator<Item = &'a Line>) -> usize {
+    lines
+        .into_iter()
         .flat_map(|line| line.iter())
-        .counts();
-    pts.values().filter(|&&cnt| cnt > 1).count()
+        .counts()
+        .values()
+        .filter(|&&cnt| cnt > 1)
+        .count()
 }
 
-fn part2() -> u64 {
-    0
+fn part1(lines: &[Line]) -> usize {
+    count_overlap(
+        lines
+            .iter()
+            .filter(|line| line.horizontal() || line.vertical()),
+    )
+}
+
+fn part2(lines: &[Line]) -> usize {
+    count_overlap(lines)
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -129,7 +142,7 @@ pub fn run() -> Result<String, String> {
         .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = part1(&lines);
-    let out2 = part2();
+    let out2 = part2(&lines);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -152,5 +165,22 @@ mod tests {
             Line::new_xy(5, 5, 8, 2),
         ];
         assert_eq!(part1(&lines), 5);
+    }
+
+    #[test]
+    fn test02() {
+        let lines = [
+            Line::new_xy(0, 9, 5, 9),
+            Line::new_xy(8, 0, 0, 8),
+            Line::new_xy(9, 4, 3, 4),
+            Line::new_xy(2, 2, 2, 1),
+            Line::new_xy(7, 0, 7, 4),
+            Line::new_xy(6, 4, 2, 0),
+            Line::new_xy(0, 9, 2, 9),
+            Line::new_xy(3, 4, 1, 4),
+            Line::new_xy(0, 0, 8, 8),
+            Line::new_xy(5, 5, 8, 2),
+        ];
+        assert_eq!(part2(&lines), 12);
     }
 }
