@@ -234,7 +234,6 @@ fn part2(runs: &[(Vec<Digit>, Vec<Digit>)]) -> u64 {
     runs.iter().map(|(pats, out)| decode(pats, out)).sum()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d08.txt");
     let runs = input
@@ -399,7 +398,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             runs.iter()
-                .map(|(pats, out)| decode(&pats, &out))
+                .map(|(pats, out)| decode(pats, out))
                 .collect::<Vec<_>>(),
             vec![8394, 9781, 1197, 9361, 4873, 8418, 4548, 1625, 8717, 4315]
         );

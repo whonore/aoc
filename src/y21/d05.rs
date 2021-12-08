@@ -134,7 +134,6 @@ fn part2(lines: &[Line]) -> usize {
     count_overlap(lines)
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d05.txt");
     let lines = input

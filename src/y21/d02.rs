@@ -100,7 +100,6 @@ fn part2(dirs: &[Dir]) -> i64 {
     pos.horz * pos.depth
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d02.txt");
     let dirs = input

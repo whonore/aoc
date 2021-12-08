@@ -88,7 +88,6 @@ fn part2(bins: &[Bin]) -> u64 {
     o2.to_u64() * co2.to_u64()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d03.txt");
     let bins = input

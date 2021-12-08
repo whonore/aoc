@@ -25,7 +25,6 @@ fn part2(pos: &[u64]) -> u64 {
         .unwrap()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d07.txt");
     let pos = input

@@ -46,7 +46,6 @@ fn part1(mut fish: Fish, days: u64) -> usize {
     fish.count()
 }
 
-#[allow(clippy::unnecessary_wraps)]
 pub fn run() -> Result<String, String> {
     let input = include_str!("input/d06.txt");
     let fish = Fish::new(
