@@ -57,6 +57,7 @@ struct ChunkParser<'t> {
     tokens: &'t [Token],
     stack: Vec<Bracket>,
     chunks: Vec<Vec<Chunk>>,
+    corrupted: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,6 +73,7 @@ impl<'a> ChunkParser<'a> {
             tokens,
             stack: vec![],
             chunks: vec![],
+            corrupted: false,
         }
     }
 }
@@ -80,7 +82,9 @@ impl<'t> Iterator for ChunkParser<'t> {
     type Item = Result<Chunk, ChunkErr>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some((&token, rest)) = self.tokens.split_first() {
+        if self.corrupted {
+            None
+        } else if let Some((&token, rest)) = self.tokens.split_first() {
             self.tokens = rest;
             match token {
                 Token::Open(b) => {
@@ -107,6 +111,7 @@ impl<'t> Iterator for ChunkParser<'t> {
                                 Some(Err(ChunkErr::InProgress))
                             }
                         } else {
+                            self.corrupted = true;
                             Some(Err(ChunkErr::Corrupted(open, close)))
                         }
                     }
@@ -123,8 +128,7 @@ impl<'t> Iterator for ChunkParser<'t> {
 fn part1(nav: &[Vec<Token>]) -> u64 {
     nav.iter()
         .map(|tokens| {
-            let mut parser = ChunkParser::new(tokens);
-            parser
+            ChunkParser::new(tokens)
                 .find_map(|chunk| match chunk {
                     Err(ChunkErr::Corrupted(_, found)) => Some(match found {
                         Bracket::Paren => 3,
@@ -139,8 +143,26 @@ fn part1(nav: &[Vec<Token>]) -> u64 {
         .sum()
 }
 
-fn part2() -> u64 {
-    0
+fn part2(nav: &[Vec<Token>]) -> u64 {
+    let mut scores = nav
+        .iter()
+        .map(|tokens| {
+            ChunkParser::new(tokens)
+                .filter_map(|chunk| match chunk {
+                    Err(ChunkErr::Incomplete(Token::Open(brack))) => Some(match brack {
+                        Bracket::Paren => 1,
+                        Bracket::Square => 2,
+                        Bracket::Curly => 3,
+                        Bracket::Angle => 4,
+                    }),
+                    _ => None,
+                })
+                .fold(0, |score, val| score * 5 + val)
+        })
+        .filter(|&score| score > 0)
+        .collect::<Vec<_>>();
+    scores.sort_unstable();
+    scores[scores.len() / 2]
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -156,7 +178,7 @@ pub fn run() -> Result<String, String> {
         })
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = part1(&nav);
-    let out2 = part2();
+    let out2 = part2(&nav);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -234,6 +256,25 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_incomplete() {
+        assert_eq!(
+            parse("("),
+            vec![Err(ChunkErr::Incomplete(Token::Open(Bracket::Paren)))]
+        );
+        assert_eq!(
+            parse("{()"),
+            vec![Err(ChunkErr::Incomplete(Token::Open(Bracket::Curly)))]
+        );
+        assert_eq!(
+            parse("<{}{"),
+            vec![
+                Err(ChunkErr::Incomplete(Token::Open(Bracket::Curly))),
+                Err(ChunkErr::Incomplete(Token::Open(Bracket::Angle))),
+            ]
+        );
+    }
+
+    #[test]
     fn test01() {
         let nav = [
             "[({(<(())[]>[[{[]{<()<>>",
@@ -255,5 +296,29 @@ mod tests {
         })
         .collect::<Vec<_>>();
         assert_eq!(part1(&nav), 26397);
+    }
+
+    #[test]
+    fn test02() {
+        let nav = [
+            "[({(<(())[]>[[{[]{<()<>>",
+            "[(()[<>])]({[<{<<[]>>(",
+            "{([(<{}[<>[]}>{[]{[(<()>",
+            "(((({<>}<{<{<>}{[]{[]{}",
+            "[[<[([]))<([[{}[[()]]]",
+            "[{[{({}]{}}([{[{{{}}([]",
+            "{<[[]]>}<{[{[{[]{()[[[]",
+            "[<(<(<(<{}))><([]([]()",
+            "<{([([[(<>()){}]>(<<{{",
+            "<{([{{}}[<[[[<>{}]]]>[]]",
+        ]
+        .iter()
+        .map(|line| {
+            line.chars()
+                .map(|c| Token::try_from(c).unwrap())
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+        assert_eq!(part2(&nav), 288_957);
     }
 }
