@@ -20,7 +20,7 @@ impl Axis {
 #[derive(Debug, Clone, Copy)]
 struct Fold {
     axis: Axis,
-    val: i64,
+    val: usize,
 }
 
 impl FromStr for Fold {
@@ -37,8 +37,8 @@ impl FromStr for Fold {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Point {
-    x: i64,
-    y: i64,
+    x: usize,
+    y: usize,
 }
 
 impl FromStr for Point {
@@ -54,12 +54,12 @@ impl FromStr for Point {
 }
 
 impl Point {
-    const fn fold(&self, fold: &Fold) -> Self {
+    const fn reflect(&self, fold: &Fold) -> Self {
         let val = match fold.axis {
             Axis::X => self.x,
             Axis::Y => self.y,
         };
-        if fold.val < val {
+        if val < fold.val {
             *self
         } else {
             let val = 2 * fold.val - val;
@@ -71,15 +71,35 @@ impl Point {
     }
 }
 
+fn draw<'p>(pts: impl Iterator<Item = &'p Point>, width: usize, height: usize) -> String {
+    let mut img = vec![vec![' '; width]; height];
+    for pt in pts {
+        img[pt.y][pt.x] = '\u{2588}';
+    }
+    img.iter()
+        .map(|line| line.iter().collect::<String>())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn part1(pts: &HashSet<Point>, folds: &[Fold]) -> usize {
     pts.iter()
-        .map(|pt| pt.fold(&folds[0]))
+        .map(|pt| pt.reflect(&folds[0]))
         .collect::<HashSet<_>>()
         .len()
 }
 
-fn part2() -> u64 {
-    0
+fn part2(pts: &HashSet<Point>, folds: &[Fold]) -> String {
+    let pts = folds.iter().fold(pts.clone(), |pts, fold| {
+        pts.iter()
+            .map(|pt| pt.reflect(fold))
+            .collect::<HashSet<_>>()
+    });
+    draw(
+        pts.iter(),
+        pts.iter().map(|pt| pt.x).max().unwrap_or(0) + 1,
+        pts.iter().map(|pt| pt.y).max().unwrap_or(0) + 1,
+    )
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -98,8 +118,8 @@ pub fn run() -> Result<String, String> {
         .map(str::parse)
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = part1(&pts, &folds);
-    let out2 = part2();
-    Ok(format!("{} {}", out1, out2))
+    let out2 = part2(&pts, &folds);
+    Ok(format!("{}\n{}", out1, out2))
 }
 
 #[cfg(test)]
