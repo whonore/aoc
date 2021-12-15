@@ -55,12 +55,35 @@ fn find_path(risks: &[Vec<u64>]) -> u64 {
     *dists.get(&(size - 1, size - 1)).unwrap()
 }
 
+fn expand_map(risks: &mut Vec<Vec<u64>>, n: usize) {
+    let add_wrap_9 = |x: u64, y: u64| -> u64 { (x + y - 1) % 9 + 1 };
+    let size = risks.len();
+    for row in risks.iter_mut() {
+        let new = row.repeat(n - 1);
+        let new = new.iter().enumerate().map(|(idx, v)| {
+            let cell = 1 + (idx / size) as u64;
+            add_wrap_9(*v, cell)
+        });
+        row.extend(new);
+    }
+    for cell in 1..n {
+        let mut new_risks = risks[..size].to_vec();
+        for row in &mut new_risks {
+            for c in row.iter_mut() {
+                *c = add_wrap_9(*c, cell as u64);
+            }
+        }
+        risks.extend(new_risks);
+    }
+}
+
 fn part1(risks: &[Vec<u64>]) -> u64 {
     find_path(risks)
 }
 
-fn part2() -> u64 {
-    0
+fn part2(mut risks: Vec<Vec<u64>>) -> u64 {
+    expand_map(&mut risks, 5);
+    find_path(&risks)
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -79,7 +102,7 @@ pub fn run() -> Result<String, String> {
         })
         .collect::<Result<Vec<_>, _>>()?;
     let out1 = part1(&risks);
-    let out2 = part2();
+    let out2 = part2(risks);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -102,5 +125,22 @@ mod tests {
             vec![2, 3, 1, 1, 9, 4, 4, 5, 8, 1],
         ];
         assert_eq!(part1(&risks), 40);
+    }
+
+    #[test]
+    fn test02() {
+        let risks = vec![
+            vec![1, 1, 6, 3, 7, 5, 1, 7, 4, 2],
+            vec![1, 3, 8, 1, 3, 7, 3, 6, 7, 2],
+            vec![2, 1, 3, 6, 5, 1, 1, 3, 2, 8],
+            vec![3, 6, 9, 4, 9, 3, 1, 5, 6, 9],
+            vec![7, 4, 6, 3, 4, 1, 7, 1, 1, 1],
+            vec![1, 3, 1, 9, 1, 2, 8, 1, 3, 7],
+            vec![1, 3, 5, 9, 9, 1, 2, 4, 2, 1],
+            vec![3, 1, 2, 5, 4, 2, 1, 6, 3, 9],
+            vec![1, 2, 9, 3, 1, 3, 8, 5, 2, 1],
+            vec![2, 3, 1, 1, 9, 4, 4, 5, 8, 1],
+        ];
+        assert_eq!(part2(risks), 315);
     }
 }
