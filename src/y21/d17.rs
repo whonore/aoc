@@ -46,9 +46,9 @@ const fn max_v_y(_v_x: u64, _tgt: Target) -> i64 {
 }
 
 fn part1(tgt: Target) -> i64 {
-    (min_v_x(tgt)..max_v_x(tgt))
+    (min_v_x(tgt)..=max_v_x(tgt))
         .flat_map(|x| {
-            (min_v_y(tgt)..max_v_y(x, tgt)).filter_map(move |y| {
+            (min_v_y(tgt)..=max_v_y(x, tgt)).filter_map(move |y| {
                 let (pos, ok) = simulate(x, y, tgt);
                 ok.then(|| pos.iter().map(|xy| xy.1).max().unwrap())
             })
@@ -57,8 +57,10 @@ fn part1(tgt: Target) -> i64 {
         .unwrap()
 }
 
-fn part2() -> u64 {
-    0
+fn part2(tgt: Target) -> usize {
+    (min_v_x(tgt)..=max_v_x(tgt))
+        .flat_map(|x| (min_v_y(tgt)..=max_v_y(x, tgt)).filter(move |&y| simulate(x, y, tgt).1))
+        .count()
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -83,7 +85,7 @@ pub fn run() -> Result<String, String> {
         (minx, maxx, miny, maxy)
     };
     let out1 = part1(tgt);
-    let out2 = part2();
+    let out2 = part2(tgt);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -103,5 +105,10 @@ mod tests {
     #[test]
     fn test01() {
         assert_eq!(part1((20, 30, -10, -5)), 45);
+    }
+
+    #[test]
+    fn test02() {
+        assert_eq!(part2((20, 30, -10, -5)), 112);
     }
 }
