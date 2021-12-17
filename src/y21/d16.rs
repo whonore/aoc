@@ -1,7 +1,9 @@
+use std::convert::{TryFrom, TryInto};
+
 use itertools::Itertools;
 use nom::{
     bits::complete::take,
-    combinator::map,
+    combinator::{map, map_res},
     multi::{count, many1},
     sequence::tuple,
     IResult,
@@ -26,24 +28,68 @@ fn split_bits(input: Bits<'_>, n: usize) -> (Bits<'_>, Bits<'_>) {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Operation {
+    Sum,
+    Product,
+    Minimum,
+    Maximum,
+    Greater,
+    Lesser,
+    Equal,
+}
+
+impl TryFrom<u8> for Operation {
+    type Error = u8;
+
+    fn try_from(kind: u8) -> Result<Self, Self::Error> {
+        match kind {
+            0 => Ok(Self::Sum),
+            1 => Ok(Self::Product),
+            2 => Ok(Self::Minimum),
+            3 => Ok(Self::Maximum),
+            5 => Ok(Self::Greater),
+            6 => Ok(Self::Lesser),
+            7 => Ok(Self::Equal),
+            _ => Err(kind),
+        }
+    }
+}
+
+impl Operation {
+    fn eval(self, mut args: impl Iterator<Item = u64>) -> u64 {
+        match self {
+            Self::Sum => args.sum(),
+            Self::Product => args.product(),
+            Self::Minimum => args.min().unwrap(),
+            Self::Maximum => args.max().unwrap(),
+            Self::Greater => (args.next().unwrap() > args.next().unwrap()) as u64,
+            Self::Lesser => (args.next().unwrap() < args.next().unwrap()) as u64,
+            Self::Equal => (args.next().unwrap() == args.next().unwrap()) as u64,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 enum PacketKind {
     Literal,
-    Operator,
+    Operator(Operation),
 }
 
-impl From<u8> for PacketKind {
-    fn from(kind: u8) -> Self {
-        match kind {
+impl TryFrom<u8> for PacketKind {
+    type Error = u8;
+
+    fn try_from(kind: u8) -> Result<Self, Self::Error> {
+        Ok(match kind {
             4 => Self::Literal,
-            _ => Self::Operator,
-        }
+            _ => Self::Operator(kind.try_into()?),
+        })
     }
 }
 
 impl PacketKind {
     fn parse(bits: Bits<'_>) -> IResult<Bits<'_>, Self> {
-        map(take(3_usize), u8::into)(bits)
+        map_res(take(3_usize), u8::try_into)(bits)
     }
 }
 
@@ -67,7 +113,7 @@ impl LengthKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Payload {
     Literal(u64),
-    Operator(Vec<Packet>),
+    Operator(Vec<Packet>, Operation),
 }
 
 impl Payload {
@@ -75,7 +121,9 @@ impl Payload {
         let (bits, kind) = PacketKind::parse(bits)?;
         match kind {
             PacketKind::Literal => map(Self::parse_literal, Self::Literal)(bits),
-            PacketKind::Operator => map(Self::parse_operator, Self::Operator)(bits),
+            PacketKind::Operator(op) => {
+                map(Self::parse_operator, |pkts| Self::Operator(pkts, op))(bits)
+            }
         }
     }
 
@@ -101,6 +149,13 @@ impl Payload {
                 Ok((rest, packets))
             }
             LengthKind::Count(n) => count(Packet::parse_bits, n)(bits),
+        }
+    }
+
+    fn eval(&self) -> u64 {
+        match self {
+            Self::Literal(n) => *n,
+            Self::Operator(pkts, op) => op.eval(pkts.iter().map(Packet::eval)),
         }
     }
 }
@@ -142,18 +197,21 @@ impl Packet {
         u64::from(self.version)
             + match &self.payload {
                 Payload::Literal(_) => 0,
-                Payload::Operator(pkts) => pkts.iter().map(Self::version_sum).sum(),
+                Payload::Operator(pkts, _) => pkts.iter().map(Self::version_sum).sum(),
             }
+    }
+
+    fn eval(&self) -> u64 {
+        self.payload.eval()
     }
 }
 
 fn part1(hex: &str) -> Result<u64, String> {
-    let pkt = Packet::parse(hex)?;
-    Ok(pkt.version_sum())
+    Packet::parse(hex).map(|pkt| pkt.version_sum())
 }
 
-fn part2() -> u64 {
-    0
+fn part2(hex: &str) -> Result<u64, String> {
+    Packet::parse(hex).map(|pkt| pkt.eval())
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -161,7 +219,7 @@ pub fn run() -> Result<String, String> {
     let input = include_str!("input/d16.txt");
     let hex = input.trim();
     let out1 = part1(hex)?;
-    let out2 = part2();
+    let out2 = part2(hex)?;
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -222,16 +280,19 @@ mod tests {
             Packet::parse("38006F45291200"),
             Ok(Packet {
                 version: 1,
-                payload: Payload::Operator(vec![
-                    Packet {
-                        version: 6,
-                        payload: Payload::Literal(10)
-                    },
-                    Packet {
-                        version: 2,
-                        payload: Payload::Literal(20)
-                    },
-                ])
+                payload: Payload::Operator(
+                    vec![
+                        Packet {
+                            version: 6,
+                            payload: Payload::Literal(10)
+                        },
+                        Packet {
+                            version: 2,
+                            payload: Payload::Literal(20)
+                        },
+                    ],
+                    Operation::Lesser
+                )
             })
         );
     }
@@ -242,20 +303,23 @@ mod tests {
             Packet::parse("EE00D40C823060"),
             Ok(Packet {
                 version: 7,
-                payload: Payload::Operator(vec![
-                    Packet {
-                        version: 2,
-                        payload: Payload::Literal(1)
-                    },
-                    Packet {
-                        version: 4,
-                        payload: Payload::Literal(2)
-                    },
-                    Packet {
-                        version: 1,
-                        payload: Payload::Literal(3)
-                    },
-                ])
+                payload: Payload::Operator(
+                    vec![
+                        Packet {
+                            version: 2,
+                            payload: Payload::Literal(1)
+                        },
+                        Packet {
+                            version: 4,
+                            payload: Payload::Literal(2)
+                        },
+                        Packet {
+                            version: 1,
+                            payload: Payload::Literal(3)
+                        },
+                    ],
+                    Operation::Maximum
+                )
             })
         );
     }
@@ -266,5 +330,17 @@ mod tests {
         assert_eq!(part1("620080001611562C8802118E34"), Ok(12));
         assert_eq!(part1("C0015000016115A2E0802F182340"), Ok(23));
         assert_eq!(part1("A0016C880162017C3686B18A3D4780"), Ok(31));
+    }
+
+    #[test]
+    fn test02() {
+        assert_eq!(part2("C200B40A82"), Ok(3));
+        assert_eq!(part2("04005AC33890"), Ok(54));
+        assert_eq!(part2("880086C3E88112"), Ok(7));
+        assert_eq!(part2("CE00C43D881120"), Ok(9));
+        assert_eq!(part2("D8005AC2A8F0"), Ok(1));
+        assert_eq!(part2("F600BC2D8F"), Ok(0));
+        assert_eq!(part2("9C005AC2F8F0"), Ok(0));
+        assert_eq!(part2("9C0141080250320F1802104A08"), Ok(1));
     }
 }
