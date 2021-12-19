@@ -79,6 +79,15 @@ impl Point {
         };
         Self { x, y, z }
     }
+
+    #[allow(clippy::cast_sign_loss)]
+    const fn magnitude(&self) -> u64 {
+        (self.x.abs() + self.y.abs() + self.z.abs()) as u64
+    }
+
+    fn dist(&self, other: &Self) -> u64 {
+        (*self - *other).magnitude()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -104,6 +113,7 @@ impl FromStr for Scanner {
 struct Map {
     scanners: VecDeque<Scanner>,
     beacons: HashSet<Point>,
+    scanner_pos: Vec<Point>,
 }
 
 impl Map {
@@ -112,19 +122,22 @@ impl Map {
         Self {
             scanners: scanners.iter().cloned().collect(),
             beacons: first.beacons.clone(),
+            scanner_pos: vec![],
         }
     }
 
     fn resolve_all(&mut self) {
         while let Some(scanner) = self.scanners.pop_back() {
-            if !Self::resolve(&mut self.beacons, &scanner) {
+            if let Some(pos) = Self::resolve(&mut self.beacons, &scanner) {
+                self.scanner_pos.push(pos);
+            } else {
                 self.scanners.push_front(scanner);
             }
         }
     }
 
-    fn resolve(beacons: &mut HashSet<Point>, scanner: &Scanner) -> bool {
-        (0..24).any(|r| {
+    fn resolve(beacons: &mut HashSet<Point>, scanner: &Scanner) -> Option<Point> {
+        (0..24).find_map(|r| {
             let rotated = scanner
                 .beacons
                 .iter()
@@ -134,12 +147,14 @@ impl Map {
                 .iter()
                 .cartesian_product(&rotated)
                 .map(|(p1, p2)| *p1 - *p2)
-                .map(|off| rotated.iter().map(|pt| *pt + off).collect::<Vec<_>>())
-                .find(|rotated_off| {
+                .map(|off| (off, rotated.iter().map(|pt| *pt + off).collect::<Vec<_>>()))
+                .find(|(_, rotated_off)| {
                     rotated_off.iter().filter(|pt| beacons.contains(pt)).count() >= 12
                 })
-                .map(|rotated_off| beacons.extend(rotated_off))
-                .is_some()
+                .map(|(off, rotated_off)| {
+                    beacons.extend(rotated_off);
+                    off
+                })
         })
     }
 }
@@ -153,7 +168,12 @@ fn part1(scanners: &[Scanner]) -> usize {
 fn part2(scanners: &[Scanner]) -> u64 {
     let mut map = Map::new(scanners);
     map.resolve_all();
-    0
+    map.scanner_pos
+        .iter()
+        .tuple_combinations()
+        .map(|(pt1, pt2)| pt1.dist(pt2))
+        .max()
+        .unwrap()
 }
 
 #[allow(clippy::unnecessary_wraps)]
