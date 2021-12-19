@@ -1,5 +1,7 @@
 use std::ops::Add;
 
+use itertools::Itertools;
+
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -188,8 +190,12 @@ fn part1(nums: Vec<Num>) -> u64 {
     nums.into_iter().reduce(|x, y| x + y).unwrap().magnitude()
 }
 
-fn part2() -> u64 {
-    0
+fn part2(nums: Vec<Num>) -> u64 {
+    nums.into_iter()
+        .permutations(2)
+        .map(|nums| (nums[0].clone() + nums[1].clone()).magnitude())
+        .max()
+        .unwrap()
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -199,8 +205,8 @@ pub fn run() -> Result<String, String> {
         .lines()
         .map(Num::parse)
         .collect::<Result<Vec<_>, _>>()?;
-    let out1 = part1(nums);
-    let out2 = part2();
+    let out1 = part1(nums.clone());
+    let out2 = part2(nums);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -330,6 +336,25 @@ mod tests {
         assert_eq!(part1(xs), 4140);
     }
 
-    // #[test]
-    // fn test01() {}
+    #[test]
+    fn test02() {
+        let xs = [
+            "[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
+            "[[[5,[2,8]],4],[5,[[9,9],0]]]",
+            "[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
+            "[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
+            "[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
+            "[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
+            "[[[[5,4],[7,7]],8],[[8,3],8]]",
+            "[[9,3],[[9,9],[6,[4,9]]]]",
+            "[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
+            "[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]",
+        ]
+        .iter()
+        .copied()
+        .map(Num::parse)
+        .map(Result::unwrap)
+        .collect::<Vec<_>>();
+        assert_eq!(part2(xs), 3993);
+    }
 }
