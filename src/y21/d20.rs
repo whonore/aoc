@@ -101,17 +101,21 @@ impl FromStr for Image {
 
 impl Image {
     fn enhance(&mut self, alg: &Algorithm) {
+        let bg = if alg.toggles() {
+            self.bg.toggle()
+        } else {
+            self.bg
+        };
         self.pixels = self
             .pixels
             .keys()
             .flat_map(|(r, c)| {
-                (r - 2..r + 2).flat_map(move |r2| (c - 2..c + 2).map(move |c2| (r2, c2)))
+                (r - 1..=r + 1).flat_map(move |r2| (c - 1..=c + 1).map(move |c2| (r2, c2)))
             })
             .map(|(r, c)| ((r, c), alg.get_pixel(&self.neighbors(r, c))))
+            .filter(|(_, pix)| *pix != bg)
             .collect();
-        if alg.toggles() {
-            self.bg = self.bg.toggle();
-        }
+        self.bg = bg;
     }
 
     fn neighbors(&self, r: isize, c: isize) -> [Pixel; 9] {
@@ -141,15 +145,11 @@ impl Image {
     }
 }
 
-fn part1(mut img: Image, alg: &Algorithm) -> usize {
-    for _ in 0..2 {
+fn part1(mut img: Image, alg: &Algorithm, n: u64) -> usize {
+    for _ in 0..n {
         img.enhance(alg);
     }
     img.count()
-}
-
-fn part2() -> u64 {
-    0
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -158,12 +158,12 @@ pub fn run() -> Result<String, String> {
     let (alg, img) = {
         let mut blocks = input.split("\n\n");
         (
-            blocks.next().unwrap().parse()?,
-            blocks.next().unwrap().parse()?,
+            blocks.next().unwrap().parse::<Algorithm>()?,
+            blocks.next().unwrap().parse::<Image>()?,
         )
     };
-    let out1 = part1(img, &alg);
-    let out2 = part2();
+    let out1 = part1(img.clone(), &alg, 2);
+    let out2 = part1(img, &alg, 50);
     Ok(format!("{} {}", out1, out2))
 }
 
@@ -179,8 +179,9 @@ mod tests {
                    ##..#\n\
                    ..#..\n\
                    ..###"
-            .parse()
+            .parse::<Image>()
             .unwrap();
-        assert_eq!(part1(img, &alg), 35);
+        assert_eq!(part1(img.clone(), &alg, 2), 35);
+        assert_eq!(part1(img, &alg, 50), 3351);
     }
 }
