@@ -326,7 +326,7 @@ mod tests {
         .map(str::parse)
         .map(Result::unwrap)
         .collect::<Vec<_>>();
-        assert_eq!(part1(&steps), 590784);
+        assert_eq!(part1(&steps), 590_784);
     }
 
     #[test]
@@ -398,6 +398,6 @@ mod tests {
         .map(str::parse)
         .map(Result::unwrap)
         .collect::<Vec<_>>();
-        assert_eq!(part2(&steps), 2758514936282235);
+        assert_eq!(part2(&steps), 2_758_514_936_282_235);
     }
 }
