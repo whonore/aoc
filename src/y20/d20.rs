@@ -161,7 +161,7 @@ impl Tile {
                 }
             }
             Bottom => out.pix.append(&mut tile.pix),
-            _ => panic!("join not implemented for {:?}", side),
+            _ => unimplemented!("join not implemented for {:?}", side),
         }
         out
     }

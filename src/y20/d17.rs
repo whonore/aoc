@@ -109,7 +109,7 @@ impl<D: Dimension> FromStr for Cube<D> {
                 row.chars().enumerate().filter_map(move |(x, c)| match c {
                     '#' => Some(Point::new2(x as i64, y as i64)),
                     '.' => None,
-                    _ => panic!("Invalid char {}", c),
+                    _ => unreachable!("Invalid char {}", c),
                 })
             })
             .collect::<HashSet<_>>();

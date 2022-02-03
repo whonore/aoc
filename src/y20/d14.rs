@@ -61,7 +61,7 @@ fn bit_at(n: u64, bit: u8) -> bool {
     match (n >> bit) & 1 {
         0 => false,
         1 => true,
-        _ => panic!("Impossible bit_at"),
+        _ => unreachable!("Impossible bit_at"),
     }
 }
 
