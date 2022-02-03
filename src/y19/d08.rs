@@ -75,7 +75,7 @@ impl Layers {
                 .map(|c| Pixel::new(c.to_digit(10).unwrap()))
                 .collect::<Vec<_>>()
                 .chunks(width * height)
-                .map(|layer| Layer(layer.chunks(width).map(|row| row.to_vec()).collect()))
+                .map(|layer| Layer(layer.chunks(width).map(<[_]>::to_vec).collect()))
                 .collect(),
         }
     }

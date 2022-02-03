@@ -255,15 +255,12 @@ fn part1(steps: &[Step]) -> i64 {
     steps
         .iter()
         .filter(|step| step.range.contained(((-50, -50, -50), (50, 50, 50))))
-        .fold(Cubes::default(), |cubes, step| cubes.apply(step))
+        .fold(Cubes::default(), Cubes::apply)
         .count()
 }
 
 fn part2(steps: &[Step]) -> i64 {
-    steps
-        .iter()
-        .fold(Cubes::default(), |cubes, step| cubes.apply(step))
-        .count()
+    steps.iter().fold(Cubes::default(), Cubes::apply).count()
 }
 
 #[allow(clippy::unnecessary_wraps)]

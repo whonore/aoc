@@ -24,7 +24,7 @@ fn lcm(x: u64, y: u64) -> u64 {
     (x * y) / gcd(x, y)
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 struct Point {
     x: i64,
     y: i64,
@@ -62,12 +62,6 @@ impl From<(i64, i64, i64)> for Point {
             y: pt.1,
             z: pt.2,
         }
-    }
-}
-
-impl Default for Point {
-    fn default() -> Self {
-        Self { x: 0, y: 0, z: 0 }
     }
 }
 
@@ -165,11 +159,11 @@ fn step(moons: &mut [Body]) {
 
 fn step_until_repeat<F>(moons: &mut [Body], axis: F) -> u64
 where
-    F: Fn(&Body) -> (i64, i64),
+    F: Fn(&Body) -> (i64, i64) + Copy,
 {
     let mut seen = HashSet::<Vec<(i64, i64)>>::new();
     for cnt in 0.. {
-        let axes = moons.iter().map(|moon| axis(moon)).collect::<Vec<_>>();
+        let axes = moons.iter().map(axis).collect::<Vec<_>>();
         if seen.contains(&axes) {
             return cnt;
         }

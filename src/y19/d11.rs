@@ -143,7 +143,7 @@ fn part2(prog: &Intcode) -> Result<String, String> {
     let mut grid = [" "]
         .repeat(width * height)
         .chunks(width)
-        .map(|row| row.to_vec())
+        .map(<[_]>::to_vec)
         .collect::<Vec<Vec<_>>>();
     for ((x, y), color) in robot.visited {
         if color == White {
