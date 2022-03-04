@@ -63,9 +63,9 @@ impl Operation {
             Self::Product => args.product(),
             Self::Minimum => args.min().unwrap(),
             Self::Maximum => args.max().unwrap(),
-            Self::Greater => (args.next().unwrap() > args.next().unwrap()) as u64,
-            Self::Lesser => (args.next().unwrap() < args.next().unwrap()) as u64,
-            Self::Equal => (args.next().unwrap() == args.next().unwrap()) as u64,
+            Self::Greater => u64::from(args.next().unwrap() > args.next().unwrap()),
+            Self::Lesser => u64::from(args.next().unwrap() < args.next().unwrap()),
+            Self::Equal => u64::from(args.next().unwrap() == args.next().unwrap()),
         }
     }
 }

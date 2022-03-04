@@ -7,14 +7,13 @@ enum Op {
     Plus,
     Mult,
 }
-use Op::*;
 
 #[derive(Debug, Copy, Clone)]
 enum Token {
-    TLParen,
-    TRParen,
-    TOp(Op),
-    TNumber(i64),
+    LParen,
+    RParen,
+    Op(Op),
+    Number(i64),
 }
 use Token::*;
 
@@ -23,11 +22,11 @@ impl FromStr for Token {
 
     fn from_str(e: &str) -> Result<Self, Self::Err> {
         match e.chars().next().unwrap() {
-            '(' => Ok(TLParen),
-            ')' => Ok(TRParen),
-            '+' => Ok(TOp(Plus)),
-            '*' => Ok(TOp(Mult)),
-            '0'..='9' => Ok(TNumber(e.parse::<i64>().unwrap())),
+            '(' => Ok(LParen),
+            ')' => Ok(RParen),
+            '+' => Ok(Op(Op::Plus)),
+            '*' => Ok(Op(Op::Mult)),
+            '0'..='9' => Ok(Number(e.parse::<i64>().unwrap())),
             _ => Err(format!("Invalid token {}", e)),
         }
     }
@@ -67,8 +66,8 @@ impl Expr {
                 let lhs = lhs.eval();
                 let rhs = rhs.eval();
                 match op {
-                    Plus => lhs + rhs,
-                    Mult => lhs * rhs,
+                    Op::Plus => lhs + rhs,
+                    Op::Mult => lhs * rhs,
                 }
             }
             Scalar(v) => *v,
@@ -111,7 +110,7 @@ impl SamePrec {
 
     fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
         match lex.toks.front().copied() {
-            Some(TOp(op)) => {
+            Some(Op(op)) => {
                 lex.toks.pop_front();
                 let rhs = Self::parse_term(lex)?;
                 let lhs = BinOp(op, Box::new(lhs), Box::new(rhs));
@@ -123,12 +122,12 @@ impl SamePrec {
 
     fn parse_term(lex: &mut Lexer) -> Result<Expr, String> {
         match lex.toks.pop_front() {
-            Some(TNumber(v)) => Ok(Scalar(v)),
-            Some(TLParen) => {
+            Some(Number(v)) => Ok(Scalar(v)),
+            Some(LParen) => {
                 lex.depth += 1;
                 let e = Self::parse_expr(lex)?;
                 match lex.toks.pop_front() {
-                    Some(TRParen) => {
+                    Some(RParen) => {
                         lex.depth -= 1;
                         Ok(e)
                     }
@@ -179,10 +178,10 @@ impl DiffPrec {
 
     fn parse_expr2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
         match lex.toks.front() {
-            Some(TOp(Mult)) => {
+            Some(Op(Op::Mult)) => {
                 lex.toks.pop_front();
                 let rhs = Self::parse_term(lex)?;
-                let lhs = BinOp(Mult, Box::new(lhs), Box::new(rhs));
+                let lhs = BinOp(Op::Mult, Box::new(lhs), Box::new(rhs));
                 Self::parse_expr2(lhs, lex)
             }
             _ => Ok(lhs),
@@ -196,10 +195,10 @@ impl DiffPrec {
 
     fn parse_term2(lhs: Expr, lex: &mut Lexer) -> Result<Expr, String> {
         match lex.toks.front() {
-            Some(TOp(Plus)) => {
+            Some(Op(Op::Plus)) => {
                 lex.toks.pop_front();
                 let rhs = Self::parse_factor(lex)?;
-                let lhs = BinOp(Plus, Box::new(lhs), Box::new(rhs));
+                let lhs = BinOp(Op::Plus, Box::new(lhs), Box::new(rhs));
                 Self::parse_term2(lhs, lex)
             }
             _ => Ok(lhs),
@@ -208,12 +207,12 @@ impl DiffPrec {
 
     fn parse_factor(lex: &mut Lexer) -> Result<Expr, String> {
         match lex.toks.pop_front() {
-            Some(TNumber(v)) => Ok(Scalar(v)),
-            Some(TLParen) => {
+            Some(Number(v)) => Ok(Scalar(v)),
+            Some(LParen) => {
                 lex.depth += 1;
                 let e = Self::parse_expr(lex)?;
                 match lex.toks.pop_front() {
-                    Some(TRParen) => {
+                    Some(RParen) => {
                         lex.depth -= 1;
                         Ok(e)
                     }

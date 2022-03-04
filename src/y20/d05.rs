@@ -11,9 +11,9 @@ impl FromStr for Ticket {
 
     fn from_str(ticket: &str) -> Result<Self, Self::Err> {
         let (row, col) = ticket.split_at(7);
-        let row = u8::from_str_radix(&row.replace("F", "0").replace("B", "1"), 2)
+        let row = u8::from_str_radix(&row.replace('F', "0").replace('B', "1"), 2)
             .map_err(|_| "Failed to parse row")?;
-        let col = u8::from_str_radix(&col.replace("L", "0").replace("R", "1"), 2)
+        let col = u8::from_str_radix(&col.replace('L', "0").replace('R', "1"), 2)
             .map_err(|_| "Failed to parse col")?;
         Ok(Self { row, col })
     }

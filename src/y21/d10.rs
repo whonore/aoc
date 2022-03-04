@@ -97,7 +97,7 @@ impl<'t> Iterator for ChunkParser<'t> {
                         if open == close {
                             let chunk = Chunk {
                                 bracket: open,
-                                inner: self.chunks.pop().unwrap_or_else(Vec::new),
+                                inner: self.chunks.pop().unwrap_or_default(),
                             };
                             if self.stack.is_empty() {
                                 self.chunks.clear();
